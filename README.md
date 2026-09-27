@@ -18,7 +18,7 @@ Open `http://localhost:3000`. The MapLibre map fetches the supplied MapTiler vec
 - A nonlinear timeline spans 10,000 BCE to 2026 CE. The long early period occupies less track width.
 - `public/demo/time-index.json` maps ranges of years to shared GeoJSON snapshots. The browser fetches only the selected snapshot, and caches previously used ones.
 - A small multilingual catalog supports search. Longer feature descriptions live in a separate file fetched when a feature is opened.
-- The map can switch between flat Mercator and globe projections, turn on raised terrain, zoom, and show or hide feature layers.
+- The map can switch between flat Mercator and globe projections, turn on raised terrain, zoom, and show or hide feature layers. The globe has an abstract, animated backdrop that shifts with the selected year.
 - The interface can switch between English and Persian with a right-to-left layout. The site has one light color mode.
 
 The files in `public/demo/` are sample map entries. Historical entity formats and sourcing rules will be developed one type at a time.
@@ -33,6 +33,6 @@ The generated site is in `.output/public`. `.github/workflows/deploy.yml` deploy
 
 ## Licenses
 
-Application code and interface: [PolyForm Shield License 1.0.0](LICENSE). Project-authored data: [CC BY 4.0](DATA-LICENSE.md), with attribution to **Jaamejam Contributors**. The externally provided MapTiler style, OpenStreetMap data, fonts, and dependencies are outside these grants. The globe backdrop is an optimized copy of [NASA/GSFC SVS Deep Star Maps](https://svs.gsfc.nasa.gov/3895); NASA SVS [makes this image available in the public domain](https://svs.gsfc.nasa.gov/help/), outside the project licenses. Credit: NASA/Goddard Space Flight Center Scientific Visualization Studio.
+Application code and interface: [PolyForm Shield License 1.0.0](LICENSE). Project-authored data: [CC BY 4.0](DATA-LICENSE.md), with attribution to **Jaamejam Contributors**. The externally provided MapTiler style, OpenStreetMap data, fonts, and dependencies are outside these grants.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for pull request expectations.

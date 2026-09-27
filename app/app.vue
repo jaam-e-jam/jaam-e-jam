@@ -98,6 +98,8 @@ function toProgress(value: number) {
       : recentHistoryBreak + ((value - 1000) / 1026) * (1000 - recentHistoryBreak)
 }
 const progress = computed({ get: () => Math.round(toProgress(year.value)), set: (value: number) => { year.value = fromProgress(Number(value)) } })
+// Decorative motion follows the timeline; it does not represent historical star positions.
+const skyAngle = computed(() => `${toProgress(year.value) * 0.28 - 140}deg`)
 const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
 // Approximate guide ranges, not universal period boundaries. The unlabeled
 // 3,000–1,000 BCE interval includes early recorded civilizations.
@@ -171,7 +173,7 @@ function toggleGlobe() {
   if (!map) return
   isGlobe.value = !isGlobe.value
   map.setProjection({ type: isGlobe.value ? 'globe' : 'mercator' })
-  map.easeTo({ zoom: isGlobe.value ? Math.min(map.getZoom(), 3.2) : Math.max(map.getZoom(), 4), pitch: isGlobe.value ? 12 : terrainOn.value ? terrainPitch : 0, duration: 850 })
+  map.easeTo({ zoom: isGlobe.value ? Math.min(map.getZoom(), 2.3) : Math.max(map.getZoom(), 4), pitch: isGlobe.value ? 12 : terrainOn.value ? terrainPitch : 0, duration: 850 })
 }
 function toggleTerrain() {
   if (!map) return
@@ -256,9 +258,23 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
 
 <template>
   <div class="atlas-shell" :class="{ 'is-rtl': language === 'fa', 'is-globe': isGlobe }">
+    <div v-if="isGlobe" class="celestial-backdrop" :style="{ '--epoch-angle': skyAngle }" aria-hidden="true">
+      <div class="celestial-nebula" />
+      <svg class="celestial-dial" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" focusable="false">
+        <g class="celestial-orbits">
+          <ellipse cx="720" cy="450" rx="765" ry="285" transform="rotate(-27 720 450)" class="celestial-orbit celestial-orbit-gold" />
+          <ellipse cx="720" cy="450" rx="654" ry="395" transform="rotate(24 720 450)" class="celestial-orbit celestial-orbit-teal" />
+          <circle cx="720" cy="450" r="540" class="celestial-orbit celestial-orbit-faint" />
+          <circle cx="720" cy="450" r="690" class="celestial-orbit celestial-orbit-dotted" />
+          <path d="M -150 235 C 260 105 420 115 735 200 S 1220 175 1590 40" class="celestial-orbit celestial-orbit-wisp" />
+          <path d="M -110 810 C 245 565 450 610 760 720 S 1320 785 1570 590" class="celestial-orbit celestial-orbit-wisp" />
+          <circle cx="1253" cy="324" r="4" class="celestial-node" />
+          <circle cx="227" cy="670" r="3" class="celestial-node celestial-node-teal" />
+        </g>
+      </svg>
+    </div>
     <div ref="mapElement" class="map-canvas" aria-label="Historical atlas map" />
     <div class="map-wash" aria-hidden="true" />
-    <a v-if="isGlobe" class="sky-credit" href="https://svs.gsfc.nasa.gov/3895" target="_blank" rel="noopener noreferrer">Sky: NASA/GSFC SVS</a>
 
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">
