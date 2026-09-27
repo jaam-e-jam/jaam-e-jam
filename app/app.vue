@@ -201,7 +201,7 @@ onMounted(async () => {
     if (!mapElement.value) return
     map = new maplibre.Map({
       container: mapElement.value,
-      style: 'https://api.maptiler.com/maps/topo-v4/style.json?key=42LxkcciQxUh26OjYX3E',
+      style: 'https://api.maptiler.com/maps/01a044da-1b35-7cdd-974d-dc16c9c21f73/style.json?key=42LxkcciQxUh26OjYX3E',
       center: [53, 36.5], zoom: 4.15, minZoom: 1.5, maxZoom: 15,
       attributionControl: false
     })
