@@ -121,7 +121,8 @@ export async function createSkyBackdrop(canvas: HTMLCanvasElement, url: string):
       const north = [-Math.sin(latitude) * Math.cos(longitude), -Math.sin(latitude) * Math.sin(longitude), Math.cos(latitude)]
       const screenRight = combine(east, north, Math.cos(bearing), -Math.sin(bearing))
       const screenUp = combine(north, east, Math.cos(bearing), Math.sin(bearing))
-      const forward = combine(outward, screenUp, Math.cos(pitch), -Math.sin(pitch))
+      // The camera looks through Earth toward the far-side celestial sphere.
+      const forward = combine(outward, screenUp, -Math.cos(pitch), Math.sin(pitch))
       const up = combine(screenUp, outward, Math.cos(pitch), Math.sin(pitch))
 
       gl.viewport(0, 0, width, height)
