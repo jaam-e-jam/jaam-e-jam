@@ -52,7 +52,7 @@ const copy = {
     atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
-    browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', ancient: 'Ancient history', postclassical: 'Postclassical', earlyModern: 'Early modern', modern: 'Modern',
+    browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
     about: 'About this atlas', contribute: 'Contribute', details: 'Details',
     infoTitle: 'A map built together', infoBody: 'Jaamejam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
@@ -62,7 +62,7 @@ const copy = {
     atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
-    browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', ancient: 'تاریخ باستان', postclassical: 'دوران پساکلاسیک', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
+    browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', classical: 'دوران کلاسیک', middleAges: 'قرون وسطی', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
     about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
     close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
@@ -100,8 +100,8 @@ const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
 // Broad world-history guideposts; period boundaries differ across regions.
 const eraMarkers = [
   { year: -6500, label: 'prehistory' },
-  { year: -500, label: 'ancient' },
-  { year: 1200, label: 'postclassical' },
+  { year: -200, label: 'classical' },
+  { year: 1200, label: 'middleAges' },
   { year: 1650, label: 'earlyModern' },
   { year: 1910, label: 'modern' }
 ] as const
