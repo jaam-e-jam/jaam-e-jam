@@ -40,6 +40,8 @@ const detail = ref<Record<string, Detail> | null>(null)
 const catalog = ref<Record<string, Record<'en' | 'fa', string>>>({})
 const currentFile = ref('')
 const contributionUrl = 'https://github.com/jaam-e-jam/jaam-e-jam/issues/new'
+const terrainExaggeration = 10
+const terrainPitch = 60
 const base = useRuntimeConfig().app.baseURL || '/'
 const asset = (path: string) => `${base.endsWith('/') ? base : `${base}/`}${path}`
 let map: MapLibreMap | null = null
@@ -54,7 +56,7 @@ const copy = {
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
     about: 'About this atlas', contribute: 'Contribute', details: 'Details',
-    infoTitle: 'A map built together', infoBody: 'Jaamejam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
+    infoTitle: 'A map built together', infoBody: 'Jaam-e Jam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
   },
@@ -169,7 +171,7 @@ function toggleGlobe() {
   if (!map) return
   isGlobe.value = !isGlobe.value
   map.setProjection({ type: isGlobe.value ? 'globe' : 'mercator' })
-  map.easeTo({ zoom: isGlobe.value ? Math.min(map.getZoom(), 3.2) : Math.max(map.getZoom(), 4), pitch: isGlobe.value ? 12 : 0, duration: 850 })
+  map.easeTo({ zoom: isGlobe.value ? Math.min(map.getZoom(), 3.2) : Math.max(map.getZoom(), 4), pitch: isGlobe.value ? 12 : terrainOn.value ? terrainPitch : 0, duration: 850 })
 }
 function toggleTerrain() {
   if (!map) return
@@ -181,8 +183,8 @@ function toggleTerrain() {
       tileSize: 256,
       encoding: 'mapbox'
     })
-    map.setTerrain({ source: 'terrain-dem', exaggeration: 1.25 })
-    if (!isGlobe.value) map.easeTo({ pitch: 48, duration: 650 })
+    map.setTerrain({ source: 'terrain-dem', exaggeration: terrainExaggeration })
+    if (!isGlobe.value) map.easeTo({ pitch: terrainPitch, duration: 650 })
   } else {
     map.setTerrain(null)
     if (!isGlobe.value) map.easeTo({ pitch: 0, duration: 650 })
@@ -260,7 +262,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">
         <img class="brand-symbol" :src="asset('jaamejam-logo.png')" alt="" width="46" height="46" />
-        <span class="brand-copy"><strong>JAAMEJAM</strong><small>{{ t.atlas }}</small></span>
+        <span class="brand-copy"><strong>Jaam-e Jam</strong><small>{{ t.atlas }}</small></span>
       </button>
       <div class="header-actions">
         <UDropdownMenu :items="languageItems" :content="{ align: 'end', sideOffset: 8 }" :ui="{ content: 'min-w-36 z-50' }">

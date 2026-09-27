@@ -1,6 +1,6 @@
-# Jaamejam
+# Jaam-e Jam
 
-Jaamejam is a collaborative historical atlas built with Nuxt and MapLibre.
+Jaam-e Jam is a collaborative historical atlas built with Nuxt and MapLibre.
 
 ## Run locally
 
