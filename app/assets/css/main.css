@@ -89,8 +89,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .timeline-tick.last-tick { transform: translateX(-100%); }
 .tick-line { width: 1px; height: 6px; background: #aab9ae; }
 .timeline-tick small { color: #7e8d86; font-size: 10px; }
-.timeline-eras { direction: ltr; position: relative; height: 18px; margin: 0 7px; border-top: 1px solid rgba(37, 74, 70, .12); color: #838d84; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.timeline-eras span { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
+.timeline-eras { direction: ltr; position: relative; height: 18px; margin: 0 7px; border-top: 1px solid rgba(37, 74, 70, .12); color: #687e79; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.timeline-era { position: absolute; top: -1px; height: 18px; border-top: 2px solid rgba(36, 91, 104, .55); }
+.timeline-era span { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 .maplibregl-ctrl-bottom-right { bottom: 0 !important; }
 .maplibregl-ctrl-attrib { font-size: 9px !important; }
 .is-rtl { font-family: "Noto Sans Arabic", "Noto Naskh Arabic", Tahoma, sans-serif; }
@@ -122,7 +123,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .timeline-tick small { font-size: 8px; }
   .timeline-tick.mobile-hidden-tick { display: none; }
   .timeline-eras { height: 28px; font-size: 9px; letter-spacing: 0; }
-  .timeline-eras span:nth-child(even) { top: 16px; }
+  .timeline-era:nth-child(even) { top: 12px; }
   .is-rtl .hero-card { right: 16px; }
   .is-rtl .side-tools { left: 8px; }
   .is-rtl .floating-panel { left: 54px; }

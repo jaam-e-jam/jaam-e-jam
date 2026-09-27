@@ -97,13 +97,14 @@ function toProgress(value: number) {
 }
 const progress = computed({ get: () => Math.round(toProgress(year.value)), set: (value: number) => { year.value = fromProgress(Number(value)) } })
 const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
-// Broad world-history guideposts; period boundaries differ across regions.
-const eraMarkers = [
-  { year: -6500, label: 'prehistory' },
-  { year: -200, label: 'classical' },
-  { year: 1200, label: 'middleAges' },
-  { year: 1650, label: 'earlyModern' },
-  { year: 1910, label: 'modern' }
+// Approximate guide ranges, not universal period boundaries. The unlabeled
+// 3,000–1,000 BCE interval includes early recorded civilizations.
+const eraRanges = [
+  { from: -10000, to: -3000, label: 'prehistory' },
+  { from: -1000, to: 500, label: 'classical' },
+  { from: 500, to: 1500, label: 'middleAges' },
+  { from: 1500, to: 1800, label: 'earlyModern' },
+  { from: 1800, to: 2026, label: 'modern' }
 ] as const
 const selectedDetail = computed(() => selectedId.value ? detail.value?.[selectedId.value] : undefined)
 const searchResults = computed(() => currentFeatures.value.filter(feature => {
@@ -324,7 +325,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
         <div class="timeline-actions"><button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button><button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button><button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button></div>
       </div>
       <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small>{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
-      <div class="timeline-eras"><span v-for="era in eraMarkers" :key="era.label" dir="auto" :style="{ left: `${toProgress(era.year) / 10}%` }">{{ t[era.label] }}</span></div>
+      <div class="timeline-eras"><div v-for="era in eraRanges" :key="era.label" class="timeline-era" :style="{ left: `${toProgress(era.from) / 10}%`, width: `${(toProgress(era.to) - toProgress(era.from)) / 10}%` }" :title="`${t[era.label]}: ${displayYear(era.from)}–${displayYear(era.to)}`"><span dir="auto">{{ t[era.label] }}</span></div></div>
     </footer>
   </div>
 </template>
