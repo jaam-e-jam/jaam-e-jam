@@ -31,7 +31,7 @@ The files in `public/demo/` are sample map entries. Historical entity formats an
 pnpm generate
 ```
 
-The generated site is in `.output/public`. `.github/workflows/deploy.yml` deploys commits to `main` through GitHub Pages after the workflow is enabled in repository settings. By default, it builds for `/jaam-e-jam/` at the GitHub project URL. When `jaamejam.org` is connected as a custom domain, set the repository variable `PUBLIC_BASE_URL` to `/` and configure the domain in GitHub Pages and DNS. This branch does not deploy.
+The generated site is in `.output/public`. `.github/workflows/check.yml` typechecks and generates pull requests; `.github/workflows/deploy.yml` publishes commits to `main` through GitHub Pages. By default, it builds for `/jaam-e-jam/` at the GitHub project URL. When `jaamejam.org` is connected as a custom domain, set the repository variable `PUBLIC_BASE_URL` to `/` and configure the domain in GitHub Pages and DNS. This branch does not deploy.
 
 ## Licenses
 
