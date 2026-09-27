@@ -39,6 +39,7 @@ const snapshots = ref<Snapshot[]>([])
 const detail = ref<Record<string, Detail> | null>(null)
 const catalog = ref<Record<string, Record<'en' | 'fa', string>>>({})
 const currentFile = ref('')
+const contributionUrl = 'https://github.com/jaam-e-jam/jaam-e-jam/issues/new'
 const base = useRuntimeConfig().app.baseURL || '/'
 const asset = (path: string) => `${base.endsWith('/') ? base : `${base}/`}${path}`
 let map: MapLibreMap | null = null
@@ -52,7 +53,7 @@ const copy = {
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', ancient: 'Ancient history', postclassical: 'Postclassical', earlyModern: 'Early modern', modern: 'Modern',
-    about: 'About this atlas', contribute: 'Contribute on GitHub', details: 'Details',
+    about: 'About this atlas', contribute: 'Contribute', details: 'Details',
     infoTitle: 'A map built together', infoBody: 'Jaamejam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
@@ -62,7 +63,7 @@ const copy = {
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', ancient: 'تاریخ باستان', postclassical: 'دوران پساکلاسیک', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
-    about: 'دربارهٔ اطلس', contribute: 'مشارکت در گیت‌هاب', details: 'جزئیات',
+    about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
     close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
     start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', today: 'امروز'
@@ -264,7 +265,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
         <UDropdownMenu :items="languageItems" :content="{ align: 'end', sideOffset: 8 }" :ui="{ content: 'min-w-36 z-50' }">
           <button class="language-button" type="button" :aria-label="t.language"><UIcon name="i-lucide-languages" class="icon" /><span>{{ language.toUpperCase() }}</span><UIcon name="i-lucide-chevron-down" class="language-chevron" /></button>
         </UDropdownMenu>
-        <a class="github-link" :aria-label="t.contribute" href="https://github.com/jaam-e-jam/jaam-e-jam" target="_blank" rel="noopener noreferrer"><UIcon name="i-lucide-github" class="icon" /><span>{{ t.contribute }}</span></a>
+        <a class="github-link" :aria-label="t.contribute" :href="contributionUrl" target="_blank" rel="noopener noreferrer"><UIcon name="i-lucide-github" class="icon" /><span>{{ t.contribute }}</span></a>
       </div>
     </header>
 
@@ -312,7 +313,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
       <div class="detail-content" v-if="aboutOpen"><span class="detail-glyph">ج</span><h2>{{ t.infoTitle }}</h2><p>{{ t.infoBody }}</p></div>
       <div class="detail-content" v-else-if="selectedDetail"><span class="detail-type">{{ selectedDetail.kind }}</span><h2>{{ selectedDetail.name[language] }}</h2><h3>{{ selectedDetail.subtitle[language] }}</h3><div class="detail-rule" /><p>{{ selectedDetail.body[language] }}</p></div>
       <div class="detail-content" v-else><p>{{ t.mapLoading }}</p></div>
-      <a class="detail-contribute" href="https://github.com/jaam-e-jam/jaam-e-jam" target="_blank" rel="noopener noreferrer">{{ t.contribute }}<UIcon name="i-lucide-arrow-up-right" class="icon" /></a>
+      <a class="detail-contribute" :href="contributionUrl" target="_blank" rel="noopener noreferrer">{{ t.contribute }}<UIcon name="i-lucide-arrow-up-right" class="icon" /></a>
     </aside>
 
     <div v-if="mapError || !mapReady" class="map-status"><UIcon :name="mapError ? 'i-lucide-wifi-off' : 'i-lucide-loader-circle'" class="icon" /><span>{{ mapError || t.mapLoading }}</span></div>
