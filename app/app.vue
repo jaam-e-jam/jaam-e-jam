@@ -255,7 +255,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
 </script>
 
 <template>
-  <div class="atlas-shell" :class="{ 'is-rtl': language === 'fa' }">
+  <div class="atlas-shell" :class="{ 'is-rtl': language === 'fa', 'is-globe': isGlobe }">
     <div ref="mapElement" class="map-canvas" aria-label="Historical atlas map" />
     <div class="map-wash" aria-hidden="true" />
 
