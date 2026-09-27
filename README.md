@@ -18,8 +18,10 @@ Open `http://localhost:3000`. The MapLibre map fetches the supplied MapTiler vec
 - A nonlinear timeline spans 10,000 BCE to 2026 CE. The long early period occupies less track width.
 - `public/demo/time-index.json` maps ranges of years to shared GeoJSON snapshots. The browser fetches only the selected snapshot, and caches previously used ones.
 - A small multilingual catalog supports search. Longer feature descriptions live in a separate file fetched when a feature is opened.
-- The map can switch between flat Mercator and globe projections, turn on raised terrain, zoom, and show or hide feature layers. The globe has an abstract, animated backdrop that shifts with the selected year.
+- The map can switch between flat Mercator and globe projections, turn on raised terrain, zoom, and show or hide feature layers. The globe has a camera-aware backdrop made from NASA’s J2000 celestial star map. Rotating and tilting the globe changes the visible stars. The sky uses a fixed reference Earth orientation; it does not reconstruct the sky for the selected historical year.
 - The interface can switch between English and Persian with a right-to-left layout. The site has one light color mode.
+
+The star image is NASA Goddard Space Flight Center Scientific Visualization Studio’s [Deep Star Maps](https://svs.gsfc.nasa.gov/3895/); it is third-party imagery, not project-authored CC BY data.
 
 The files in `public/demo/` are sample map entries. Historical entity formats and sourcing rules will be developed one type at a time.
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import type { SkyBackdrop } from './utils/sky-backdrop'
 
 interface AtlasFeature {
   type: 'Feature'
@@ -35,6 +36,7 @@ const mapError = ref('')
 const currentFeatures = ref<AtlasFeature[]>([])
 const visible = reactive({ region: true, settlement: true, route: true, event: true })
 const mapElement = ref<HTMLElement | null>(null)
+const skyCanvas = ref<HTMLCanvasElement | null>(null)
 const snapshots = ref<Snapshot[]>([])
 const detail = ref<Record<string, Detail> | null>(null)
 const catalog = ref<Record<string, Record<'en' | 'fa', string>>>({})
@@ -45,6 +47,9 @@ const terrainPitch = 60
 const base = useRuntimeConfig().app.baseURL || '/'
 const asset = (path: string) => `${base.endsWith('/') ? base : `${base}/`}${path}`
 let map: MapLibreMap | null = null
+let skyBackdrop: SkyBackdrop | null = null
+let skyLoading: Promise<void> | null = null
+let skyDisposed = false
 let playback: ReturnType<typeof setInterval> | null = null
 let requestVersion = 0
 const cache = new Map<string, AtlasCollection>()
@@ -98,8 +103,6 @@ function toProgress(value: number) {
       : recentHistoryBreak + ((value - 1000) / 1026) * (1000 - recentHistoryBreak)
 }
 const progress = computed({ get: () => Math.round(toProgress(year.value)), set: (value: number) => { year.value = fromProgress(Number(value)) } })
-// Decorative motion follows the timeline; it does not represent historical star positions.
-const skyAngle = computed(() => `${toProgress(year.value) * 0.28 - 140}deg`)
 const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
 // Approximate guide ranges, not universal period boundaries. The unlabeled
 // 3,000–1,000 BCE interval includes early recorded civilizations.
@@ -169,6 +172,30 @@ async function openFeature(id: string) {
     map?.flyTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 5.5), speed: 0.9 })
   }
 }
+function updateSky() {
+  if (isGlobe.value && map && skyBackdrop) skyBackdrop.draw(map)
+}
+function ensureSkyBackdrop() {
+  if (skyBackdrop || skyLoading || !skyCanvas.value) return
+  const canvas = skyCanvas.value
+  skyLoading = (async () => {
+    try {
+      const { createSkyBackdrop } = await import('./utils/sky-backdrop')
+      const backdrop = await createSkyBackdrop(canvas, asset('starmap-j2000.jpg'))
+      if (skyDisposed) backdrop.dispose()
+      else {
+        skyBackdrop = backdrop
+        updateSky()
+      }
+    } catch (error) {
+      console.error('Sky backdrop:', error)
+    } finally {
+      skyLoading = null
+    }
+  })()
+}
+watch(isGlobe, enabled => { if (enabled) ensureSkyBackdrop() })
+
 function toggleGlobe() {
   if (!map) return
   isGlobe.value = !isGlobe.value
@@ -229,6 +256,8 @@ onMounted(async () => {
       attributionControl: false
     })
     map.addControl(new maplibre.AttributionControl({ compact: true }), 'bottom-right')
+    map.on('move', updateSky)
+    map.on('resize', updateSky)
     map.on('error', event => { if (!mapReady.value) mapError.value = t.value.mapUnavailable; console.error('MapLibre:', event.error) })
     map.on('load', () => {
       if (!map) return
@@ -253,28 +282,15 @@ onMounted(async () => {
     mapError.value = error instanceof Error ? error.message : String(error)
   }
 })
-onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
+onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback(); map?.remove(); map = null })
 </script>
 
 <template>
   <div class="atlas-shell" :class="{ 'is-rtl': language === 'fa', 'is-globe': isGlobe }">
-    <div v-if="isGlobe" class="celestial-backdrop" :style="{ '--epoch-angle': skyAngle }" aria-hidden="true">
-      <div class="celestial-nebula" />
-      <svg class="celestial-dial" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" focusable="false">
-        <g class="celestial-orbits">
-          <ellipse cx="720" cy="450" rx="765" ry="285" transform="rotate(-27 720 450)" class="celestial-orbit celestial-orbit-gold" />
-          <ellipse cx="720" cy="450" rx="654" ry="395" transform="rotate(24 720 450)" class="celestial-orbit celestial-orbit-teal" />
-          <circle cx="720" cy="450" r="540" class="celestial-orbit celestial-orbit-faint" />
-          <circle cx="720" cy="450" r="690" class="celestial-orbit celestial-orbit-dotted" />
-          <path d="M -150 235 C 260 105 420 115 735 200 S 1220 175 1590 40" class="celestial-orbit celestial-orbit-wisp" />
-          <path d="M -110 810 C 245 565 450 610 760 720 S 1320 785 1570 590" class="celestial-orbit celestial-orbit-wisp" />
-          <circle cx="1253" cy="324" r="4" class="celestial-node" />
-          <circle cx="227" cy="670" r="3" class="celestial-node celestial-node-teal" />
-        </g>
-      </svg>
-    </div>
+    <canvas ref="skyCanvas" class="sky-backdrop" :class="{ 'sky-visible': isGlobe }" aria-hidden="true" />
     <div ref="mapElement" class="map-canvas" aria-label="Historical atlas map" />
     <div class="map-wash" aria-hidden="true" />
+    <a v-if="isGlobe" class="sky-credit" href="https://svs.gsfc.nasa.gov/3895/" target="_blank" rel="noopener noreferrer">Stars: NASA Goddard SVS</a>
 
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">

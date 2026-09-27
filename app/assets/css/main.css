@@ -11,28 +11,11 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .map-canvas { position: absolute; inset: 0; background: radial-gradient(circle at 55% 45%, #ece6d7, #d6d8ca); }
 .map-wash { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(244, 240, 231, .27) 0%, transparent 15%, transparent 65%, rgba(244, 240, 231, .25) 100%); }
 .is-globe .map-canvas { background: transparent; }
-.celestial-backdrop {
-  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-  background: radial-gradient(ellipse 75% 80% at 88% 20%, #25496a 0%, transparent 67%), radial-gradient(ellipse 58% 70% at 7% 87%, #38294b 0%, transparent 73%), linear-gradient(140deg, #080e20 0%, #111b35 52%, #080d1d 100%);
-}
-.celestial-nebula {
-  position: absolute; inset: -18%; opacity: .9;
-  background: radial-gradient(ellipse 28% 52% at 13% 52%, rgba(190, 107, 76, .47), transparent 75%), radial-gradient(ellipse 40% 35% at 82% 70%, rgba(48, 176, 166, .37), transparent 78%), radial-gradient(ellipse 25% 55% at 57% 10%, rgba(100, 91, 178, .32), transparent 80%);
-  animation: celestial-drift 32s ease-in-out infinite alternate;
-}
-.celestial-dial { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
-.celestial-orbits { transform-box: view-box; transform-origin: 50% 50%; transform: rotate(var(--epoch-angle)); transition: transform 1.2s ease-out; }
-.celestial-orbit { fill: none; stroke-width: 1.2; }
-.celestial-orbit-gold { stroke: rgba(232, 186, 114, .7); }
-.celestial-orbit-teal { stroke: rgba(116, 205, 204, .55); }
-.celestial-orbit-faint { stroke: rgba(181, 193, 225, .25); stroke-width: 1; }
-.celestial-orbit-dotted { stroke: rgba(230, 218, 189, .45); stroke-dasharray: 1 15; stroke-linecap: round; stroke-width: 2; }
-.celestial-orbit-wisp { stroke: rgba(178, 170, 209, .33); stroke-width: 1.5; }
-.celestial-node { fill: #dfb57e; filter: drop-shadow(0 0 6px #e6ad6e); }
-.celestial-node-teal { fill: #8bd5ce; filter: drop-shadow(0 0 6px #7ccbc8); }
+.sky-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; background: #050711; }
+.sky-backdrop.sky-visible { display: block; }
+.sky-credit { position: absolute; z-index: 5; right: 14px; bottom: 195px; color: rgba(255,255,255,.75); font-size: 10px; text-decoration: none; text-shadow: 0 1px 4px #000; }
+.sky-credit:hover { color: #fff; text-decoration: underline; }
 .is-globe .map-wash { background: linear-gradient(180deg, rgba(5, 14, 29, .04), transparent 45%, rgba(5, 14, 29, .1)); }
-@keyframes celestial-drift { from { transform: translate3d(-2%, 1%, 0) scale(1); } to { transform: translate3d(2%, -2%, 0) scale(1.08); } }
-@media (prefers-reduced-motion: reduce) { .celestial-nebula { animation: none; } .celestial-orbits { transition: none; } }
 .topbar { position: absolute; z-index: 12; inset: 0 0 auto; height: 83px; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 16px clamp(16px, 2vw, 28px); background: rgba(251, 249, 243, .92); border-bottom: 1px solid var(--line); box-shadow: 0 5px 24px rgba(30, 47, 43, .045); backdrop-filter: blur(18px); }
 .brand { display: inline-flex; align-items: center; gap: 13px; border: 0; background: none; padding: 0; color: var(--ink); text-align: start; }
 .brand-symbol { display: block; width: 46px; height: 46px; flex: none; object-fit: contain; }
@@ -140,6 +123,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .tool-button { width: 38px; height: 38px; }
   .floating-panel { top: 76px; right: 54px; width: min(280px, calc(100vw - 85px)); }
   .detail-panel { width: min(300px, calc(100vw - 85px)); }
+  .sky-credit { bottom: 185px; right: 9px; }
   .timeline-panel { bottom: 24px; width: calc(100% - 20px); height: 156px; padding: 12px 12px 10px; }
   .timeline-title strong { font-size: 21px; }
   .timeline-tick small { font-size: 8px; }
