@@ -70,7 +70,7 @@ const copy = {
   }
 }
 const t = computed(() => copy[language.value])
-useHead(() => ({ htmlAttrs: { lang: language.value, dir: language.value === 'fa' ? 'rtl' : 'ltr' } }))
+useHead(() => ({ htmlAttrs: { lang: language.value, dir: language.value === 'fa' ? 'rtl' : 'ltr' }, link: [{ rel: 'icon', type: 'image/png', href: asset('favicon.png') }, { rel: 'shortcut icon', href: asset('favicon.ico') }] }))
 
 function displayYear(value: number) {
   const magnitude = new Intl.NumberFormat(language.value === 'fa' ? 'fa-IR' : 'en-US').format(Math.abs(value))
@@ -259,7 +259,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
 
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">
-        <span class="brand-symbol">ج</span>
+        <img class="brand-symbol" :src="asset('jaamejam-logo.png')" alt="" width="46" height="46" />
         <span class="brand-copy"><strong>JAAMEJAM</strong><small>{{ t.atlas }}</small></span>
       </button>
       <div class="header-actions">
@@ -321,7 +321,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
 
     <footer class="timeline-panel">
       <div class="timeline-topline">
-        <div class="timeline-title"><span class="timeline-icon"><UIcon name="i-lucide-clock-3" /></span><span><small>{{ t.browse }}</small><strong>{{ displayYear(year) }}</strong></span></div>
+        <div class="timeline-title"><span class="timeline-icon"><UIcon name="i-lucide-clock-3" /></span><span><strong>{{ displayYear(year) }}</strong></span></div>
         <div class="timeline-actions"><button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button><button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button><button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button></div>
       </div>
       <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small>{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
