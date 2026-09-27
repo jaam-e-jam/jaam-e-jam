@@ -11,7 +11,16 @@ interface AtlasCollection { type: 'FeatureCollection'; features: AtlasFeature[] 
 interface Snapshot { from: number; to: number; file: string }
 interface Detail { kind: string; name: Record<'en' | 'fa', string>; subtitle: Record<'en' | 'fa', string>; body: Record<'en' | 'fa', string> }
 
-const language = ref<'en' | 'fa'>('en')
+const languages = [
+  { code: 'en', label: 'English' },
+  { code: 'fa', label: 'فارسی' }
+] as const
+const language = ref<(typeof languages)[number]['code']>('en')
+const languageItems = computed(() => languages.map(({ code, label }) => ({
+  label,
+  icon: language.value === code ? 'i-lucide-check' : undefined,
+  onSelect: () => { language.value = code }
+})))
 const year = ref(-500)
 const search = ref('')
 const searchOpen = ref(false)
@@ -40,27 +49,25 @@ const cache = new Map<string, AtlasCollection>()
 const copy = {
   en: {
     atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
-    search: 'Search the map', layers: 'Layers', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
+    search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', early: 'Deep past', classical: 'Early history', modern: 'Recent history',
     about: 'About this atlas', contribute: 'Contribute on GitHub', demo: 'INTERFACE PROTOTYPE',
-    demoNote: 'Map overlays are illustrative placeholders, not historical claims.',
     infoTitle: 'A map built together', infoBody: 'Jaamejam is a proposed open data historical atlas. The map and interface shown here are a first prototype. Historical data formats, sourcing, and review rules will be designed together after this UI is reviewed.',
     close: 'Close', noResults: 'No features in this demo snapshot', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     sample: 'Illustrative content', hide: 'Hide panel', credits: 'MapTiler · MapLibre',
-    start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later'
+    start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
   },
   fa: {
     atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
-    search: 'جستجو در نقشه', layers: 'لایه‌ها', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
+    search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', early: 'گذشتهٔ دور', classical: 'تاریخ کهن', modern: 'تاریخ نزدیک',
     about: 'دربارهٔ اطلس', contribute: 'مشارکت در گیت‌هاب', demo: 'نمونهٔ اولیهٔ رابط',
-    demoNote: 'لایه‌های نقشه صرفاً نمایشی‌اند و ادعای تاریخی ندارند.',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم طرح یک اطلس تاریخی با داده‌های آزاد است. نقشه و رابط کنونی نخستین نمونه‌اند. قالب داده‌های تاریخی، منابع و قواعد بازبینی را پس از بررسی این رابط با هم طراحی خواهیم کرد.',
     close: 'بستن', noResults: 'در این برش زمانی موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
     sample: 'محتوای نمایشی', hide: 'بستن پنل', credits: 'MapTiler · MapLibre',
-    start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین'
+    start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', today: 'امروز'
   }
 }
 const t = computed(() => copy[language.value])
@@ -70,23 +77,27 @@ function displayYear(value: number) {
   const magnitude = new Intl.NumberFormat(language.value === 'fa' ? 'fa-IR' : 'en-US').format(Math.abs(value))
   return value < 0 ? `${magnitude} ${language.value === 'fa' ? 'پ.م.' : 'BCE'}` : `${magnitude} ${language.value === 'fa' ? 'م.' : 'CE'}`
 }
+// The span from 10,000 BCE through 1,000 CE takes half its former track width.
+const deepPastBreak = 140
+const recentHistoryBreak = 378
 function fromProgress(value: number) {
-  const fraction = value / 1000
-  const result = fraction <= 0.28
-    ? -10000 + (fraction / 0.28) * 9000
-    : -1000 + ((fraction - 0.28) / 0.72) * 3026
+  const result = value <= deepPastBreak
+    ? -10000 + (value / deepPastBreak) * 9000
+    : value <= recentHistoryBreak
+      ? -1000 + ((value - deepPastBreak) / (recentHistoryBreak - deepPastBreak)) * 2000
+      : 1000 + ((value - recentHistoryBreak) / (1000 - recentHistoryBreak)) * 1026
   const rounded = Math.round(result)
   return rounded === 0 ? 1 : rounded
 }
 function toProgress(value: number) {
-  return value <= -1000 ? ((value + 10000) / 9000) * 280 : 280 + ((value + 1000) / 3026) * 720
+  return value <= -1000
+    ? ((value + 10000) / 9000) * deepPastBreak
+    : value <= 1000
+      ? deepPastBreak + ((value + 1000) / 2000) * (recentHistoryBreak - deepPastBreak)
+      : recentHistoryBreak + ((value - 1000) / 1026) * (1000 - recentHistoryBreak)
 }
 const progress = computed({ get: () => Math.round(toProgress(year.value)), set: (value: number) => { year.value = fromProgress(Number(value)) } })
-const timelineMarks = [
-  { year: -10000, label: '10,000 BCE' }, { year: -5000, label: '5,000 BCE' },
-  { year: -1000, label: '1,000 BCE' }, { year: 1, label: '1 CE' },
-  { year: 1000, label: '1,000 CE' }, { year: 2026, label: 'Today' }
-]
+const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
 const selectedDetail = computed(() => selectedId.value ? detail.value?.[selectedId.value] : undefined)
 const searchResults = computed(() => currentFeatures.value.filter(feature => {
   if (!search.value.trim()) return false
@@ -245,15 +256,16 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
       </button>
       <div class="header-actions">
         <span class="prototype-badge"><span class="status-dot" />{{ t.demo }}</span>
-        <button class="language-button" type="button" @click="language = language === 'en' ? 'fa' : 'en'" :aria-label="language === 'en' ? 'Switch to Persian' : 'Switch to English'">{{ language === 'en' ? 'فا' : 'EN' }}</button>
-        <a class="github-link" href="https://github.com/jaam-e-jam/jaam-e-jam" target="_blank" rel="noopener noreferrer"><UIcon name="i-lucide-github" class="icon" /><span>{{ t.contribute }}</span></a>
+        <UDropdownMenu :items="languageItems" :content="{ align: 'end', sideOffset: 8 }" :ui="{ content: 'min-w-36 z-50' }">
+          <button class="language-button" type="button" :aria-label="t.language"><UIcon name="i-lucide-languages" class="icon" /><span>{{ language.toUpperCase() }}</span><UIcon name="i-lucide-chevron-down" class="language-chevron" /></button>
+        </UDropdownMenu>
+        <a class="github-link" :aria-label="t.contribute" href="https://github.com/jaam-e-jam/jaam-e-jam" target="_blank" rel="noopener noreferrer"><UIcon name="i-lucide-github" class="icon" /><span>{{ t.contribute }}</span></a>
       </div>
     </header>
 
     <section class="hero-card" v-if="!selectedId && !aboutOpen">
       <p class="eyebrow"><span class="eyebrow-line" />{{ language === 'fa' ? 'جامِ جم' : 'THE CUP OF JAMSHID' }}</p>
       <h1>{{ t.explore }}</h1>
-      <p class="hero-subtitle">{{ t.demoNote }}</p>
     </section>
 
     <aside class="side-tools" :aria-label="t.layers">
@@ -282,7 +294,6 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
 
     <aside v-if="layersOpen" class="floating-panel layers-panel">
       <div class="panel-heading"><span>{{ t.layers }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="layersOpen = false"><UIcon name="i-lucide-x" /></button></div>
-      <p class="panel-intro">{{ t.demoNote }}</p>
       <div class="layer-list">
         <label class="layer-row"><span class="layer-key region-key" /><span class="layer-name">{{ t.regions }}</span><USwitch v-model="visible.region" size="sm" /></label>
         <label class="layer-row"><span class="layer-key settlement-key" /><span class="layer-name">{{ t.settlements }}</span><USwitch v-model="visible.settlement" size="sm" /></label>
@@ -301,14 +312,13 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
     </aside>
 
     <div v-if="mapError || !mapReady" class="map-status"><UIcon :name="mapError ? 'i-lucide-wifi-off' : 'i-lucide-loader-circle'" class="icon" /><span>{{ mapError || t.mapLoading }}</span></div>
-    <div class="map-legend"><span class="legend-mark">◈</span><span>{{ t.demoNote }}</span></div>
 
     <footer class="timeline-panel">
       <div class="timeline-topline">
         <div class="timeline-title"><span class="timeline-icon"><UIcon name="i-lucide-clock-3" /></span><span><small>{{ t.browse }}</small><strong>{{ displayYear(year) }}</strong></span></div>
         <div class="timeline-actions"><button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button><button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button><button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button></div>
       </div>
-      <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" style="left: 28%">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark.year" class="timeline-tick" :style="{ left: `${toProgress(mark.year) / 10}%` }"><span class="tick-line" /><small>{{ mark.label }}</small></div></div>
+      <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small>{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
       <div class="timeline-eras"><span>{{ t.early }}</span><span>{{ t.classical }}</span><span>{{ t.modern }}</span></div>
     </footer>
   </div>
