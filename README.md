@@ -33,6 +33,6 @@ The generated site is in `.output/public`. `.github/workflows/deploy.yml` deploy
 
 ## Licenses
 
-Application code and interface: [PolyForm Shield License 1.0.0](LICENSE). Project-authored data: [CC BY 4.0](DATA-LICENSE.md), with attribution to **Jaamejam Contributors**. The externally provided MapTiler style, OpenStreetMap data, fonts, and dependencies are outside these grants.
+Application code and interface: [PolyForm Shield License 1.0.0](LICENSE). Project-authored data: [CC BY 4.0](DATA-LICENSE.md), with attribution to **Jaamejam Contributors**. The externally provided MapTiler style, OpenStreetMap data, fonts, and dependencies are outside these grants. The globe backdrop is an optimized copy of [NASA/GSFC SVS Deep Star Maps](https://svs.gsfc.nasa.gov/3895); NASA SVS [makes this image available in the public domain](https://svs.gsfc.nasa.gov/help/), outside the project licenses. Credit: NASA/Goddard Space Flight Center Scientific Visualization Studio.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for pull request expectations.

@@ -258,6 +258,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
   <div class="atlas-shell" :class="{ 'is-rtl': language === 'fa', 'is-globe': isGlobe }">
     <div ref="mapElement" class="map-canvas" aria-label="Historical atlas map" />
     <div class="map-wash" aria-hidden="true" />
+    <a v-if="isGlobe" class="sky-credit" href="https://svs.gsfc.nasa.gov/3895" target="_blank" rel="noopener noreferrer">Sky: NASA/GSFC SVS</a>
 
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">
