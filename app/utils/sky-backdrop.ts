@@ -57,10 +57,11 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   })
 }
 
-export async function createSkyBackdrop(canvas: HTMLCanvasElement, url: string): Promise<SkyBackdrop> {
-  const image = await loadImage(url)
+export async function createSkyBackdrop(canvas: HTMLCanvasElement, highResUrl: string, fallbackUrl: string): Promise<SkyBackdrop> {
   const gl = canvas.getContext('webgl', { alpha: false, antialias: false })
   if (!gl) throw new Error('WebGL is unavailable for the sky backdrop')
+  const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number
+  const image = await loadImage(maxTextureSize >= 8192 ? highResUrl : fallbackUrl)
 
   const vertex = compile(gl, gl.VERTEX_SHADER, vertexSource)
   const fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentSource)
@@ -82,7 +83,18 @@ export async function createSkyBackdrop(canvas: HTMLCanvasElement, url: string):
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
   gl.bindTexture(gl.TEXTURE_2D, texture)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image)
+  if (image.width > maxTextureSize || image.height > maxTextureSize) {
+    const scaled = document.createElement('canvas')
+    const ratio = Math.min(maxTextureSize / image.width, maxTextureSize / image.height)
+    scaled.width = Math.max(1, Math.floor(image.width * ratio))
+    scaled.height = Math.max(1, Math.floor(image.height * ratio))
+    const context = scaled.getContext('2d')
+    if (!context) throw new Error('Could not scale star map for this device')
+    context.drawImage(image, 0, 0, scaled.width, scaled.height)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, scaled)
+  } else {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image)
+  }
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)

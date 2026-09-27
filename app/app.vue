@@ -181,7 +181,7 @@ function ensureSkyBackdrop() {
   skyLoading = (async () => {
     try {
       const { createSkyBackdrop } = await import('./utils/sky-backdrop')
-      const backdrop = await createSkyBackdrop(canvas, asset('starmap-j2000.jpg'))
+      const backdrop = await createSkyBackdrop(canvas, asset('starmap-j2000-8k.jpg'), asset('starmap-j2000-4k.jpg'))
       if (skyDisposed) backdrop.dispose()
       else {
         skyBackdrop = backdrop
