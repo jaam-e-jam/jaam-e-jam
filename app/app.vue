@@ -51,22 +51,20 @@ const copy = {
     atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
-    browse: 'Browse time', year: 'Year', early: 'Deep past', classical: 'Early history', modern: 'Recent history',
-    about: 'About this atlas', contribute: 'Contribute on GitHub', demo: 'INTERFACE PROTOTYPE',
-    infoTitle: 'A map built together', infoBody: 'Jaamejam is a proposed open data historical atlas. The map and interface shown here are a first prototype. Historical data formats, sourcing, and review rules will be designed together after this UI is reviewed.',
-    close: 'Close', noResults: 'No features in this demo snapshot', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
-    sample: 'Illustrative content', hide: 'Hide panel', credits: 'MapTiler · MapLibre',
+    browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', ancient: 'Ancient history', postclassical: 'Postclassical', earlyModern: 'Early modern', modern: 'Modern',
+    about: 'About this atlas', contribute: 'Contribute on GitHub', details: 'Details',
+    infoTitle: 'A map built together', infoBody: 'Jaamejam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
+    close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
   },
   fa: {
     atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
-    browse: 'پیمایش زمان', year: 'سال', early: 'گذشتهٔ دور', classical: 'تاریخ کهن', modern: 'تاریخ نزدیک',
-    about: 'دربارهٔ اطلس', contribute: 'مشارکت در گیت‌هاب', demo: 'نمونهٔ اولیهٔ رابط',
-    infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم طرح یک اطلس تاریخی با داده‌های آزاد است. نقشه و رابط کنونی نخستین نمونه‌اند. قالب داده‌های تاریخی، منابع و قواعد بازبینی را پس از بررسی این رابط با هم طراحی خواهیم کرد.',
-    close: 'بستن', noResults: 'در این برش زمانی موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
-    sample: 'محتوای نمایشی', hide: 'بستن پنل', credits: 'MapTiler · MapLibre',
+    browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', ancient: 'تاریخ باستان', postclassical: 'دوران پساکلاسیک', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
+    about: 'دربارهٔ اطلس', contribute: 'مشارکت در گیت‌هاب', details: 'جزئیات',
+    infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
+    close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
     start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', today: 'امروز'
   }
 }
@@ -98,6 +96,14 @@ function toProgress(value: number) {
 }
 const progress = computed({ get: () => Math.round(toProgress(year.value)), set: (value: number) => { year.value = fromProgress(Number(value)) } })
 const timelineMarks = [-10000, -5000, -1000, 1, 1000, 2026] as const
+// Broad world-history guideposts; period boundaries differ across regions.
+const eraMarkers = [
+  { year: -6500, label: 'prehistory' },
+  { year: -500, label: 'ancient' },
+  { year: 1200, label: 'postclassical' },
+  { year: 1650, label: 'earlyModern' },
+  { year: 1910, label: 'modern' }
+] as const
 const selectedDetail = computed(() => selectedId.value ? detail.value?.[selectedId.value] : undefined)
 const searchResults = computed(() => currentFeatures.value.filter(feature => {
   if (!search.value.trim()) return false
@@ -125,7 +131,7 @@ async function loadSnapshot() {
     currentFile.value = snapshot.file
     if (selectedId.value && !collection.features.some(feature => feature.properties.id === selectedId.value)) selectedId.value = null
   } catch (error) {
-    mapError.value = `Demo data could not load: ${error instanceof Error ? error.message : String(error)}`
+    mapError.value = `Map data could not load: ${error instanceof Error ? error.message : String(error)}`
   }
 }
 
@@ -255,7 +261,6 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
         <span class="brand-copy"><strong>JAAMEJAM</strong><small>{{ t.atlas }}</small></span>
       </button>
       <div class="header-actions">
-        <span class="prototype-badge"><span class="status-dot" />{{ t.demo }}</span>
         <UDropdownMenu :items="languageItems" :content="{ align: 'end', sideOffset: 8 }" :ui="{ content: 'min-w-36 z-50' }">
           <button class="language-button" type="button" :aria-label="t.language"><UIcon name="i-lucide-languages" class="icon" /><span>{{ language.toUpperCase() }}</span><UIcon name="i-lucide-chevron-down" class="language-chevron" /></button>
         </UDropdownMenu>
@@ -300,11 +305,10 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
         <label class="layer-row"><span class="layer-key route-key" /><span class="layer-name">{{ t.routes }}</span><USwitch v-model="visible.route" size="sm" /></label>
         <label class="layer-row"><span class="layer-key event-key" /><span class="layer-name">{{ t.events }}</span><USwitch v-model="visible.event" size="sm" /></label>
       </div>
-      <div class="panel-footer"><UIcon name="i-lucide-sparkles" class="icon" />{{ t.sample }}</div>
     </aside>
 
     <aside v-if="selectedId || aboutOpen" class="floating-panel detail-panel">
-      <div class="panel-heading"><span>{{ aboutOpen ? t.about : t.sample }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="selectedId = null; aboutOpen = false"><UIcon name="i-lucide-x" /></button></div>
+      <div class="panel-heading"><span>{{ aboutOpen ? t.about : t.details }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="selectedId = null; aboutOpen = false"><UIcon name="i-lucide-x" /></button></div>
       <div class="detail-content" v-if="aboutOpen"><span class="detail-glyph">ج</span><h2>{{ t.infoTitle }}</h2><p>{{ t.infoBody }}</p></div>
       <div class="detail-content" v-else-if="selectedDetail"><span class="detail-type">{{ selectedDetail.kind }}</span><h2>{{ selectedDetail.name[language] }}</h2><h3>{{ selectedDetail.subtitle[language] }}</h3><div class="detail-rule" /><p>{{ selectedDetail.body[language] }}</p></div>
       <div class="detail-content" v-else><p>{{ t.mapLoading }}</p></div>
@@ -319,7 +323,7 @@ onBeforeUnmount(() => { stopPlayback(); map?.remove(); map = null })
         <div class="timeline-actions"><button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button><button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button><button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button></div>
       </div>
       <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small>{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
-      <div class="timeline-eras"><span>{{ t.early }}</span><span>{{ t.classical }}</span><span>{{ t.modern }}</span></div>
+      <div class="timeline-eras"><span v-for="era in eraMarkers" :key="era.label" dir="auto" :style="{ left: `${toProgress(era.year) / 10}%` }">{{ t[era.label] }}</span></div>
     </footer>
   </div>
 </template>

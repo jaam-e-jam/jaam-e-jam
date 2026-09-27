@@ -1,6 +1,6 @@
 # Jaamejam
 
-An early interface prototype for a collaborative historical atlas. The map overlays in this branch are **fictional examples**, not historical claims.
+Jaamejam is a collaborative historical atlas built with Nuxt and MapLibre.
 
 ## Run locally
 
@@ -13,7 +13,7 @@ pnpm dev
 
 Open `http://localhost:3000`. The MapLibre map fetches the supplied MapTiler vector style at runtime. An internet connection and permission to use the MapTiler key are required for the basemap and terrain.
 
-## Prototype behavior
+## Current behavior
 
 - A nonlinear timeline spans 10,000 BCE to 2026 CE. The long early period occupies less track width.
 - `public/demo/time-index.json` maps ranges of years to shared GeoJSON snapshots. The browser fetches only the selected snapshot, and caches previously used ones.
@@ -21,7 +21,7 @@ Open `http://localhost:3000`. The MapLibre map fetches the supplied MapTiler vec
 - The map can switch between flat Mercator and globe projections, turn on raised terrain, zoom, and show or hide feature layers.
 - The interface can switch between English and Persian with a right-to-left layout. The site has one light color mode.
 
-These JSON files demonstrate the loading pattern only. They are not the final format for contributions. We will design real historical entities and source requirements one type at a time after reviewing the UI.
+The files in `public/demo/` are sample map entries. Historical entity formats and sourcing rules will be developed one type at a time.
 
 ## Static build and GitHub Pages
 
@@ -29,7 +29,7 @@ These JSON files demonstrate the loading pattern only. They are not the final fo
 pnpm generate
 ```
 
-The generated site is in `.output/public`. `.github/workflows/deploy.yml` deploys commits to `main` through GitHub Pages after the workflow is enabled in repository settings. By default, it builds for `/jaam-e-jam/` at the GitHub project URL. When `jaamejam.org` is connected as a custom domain, set the repository variable `PUBLIC_BASE_URL` to `/` and configure the domain in GitHub Pages and DNS. The prototype branch itself does not deploy.
+The generated site is in `.output/public`. `.github/workflows/deploy.yml` deploys commits to `main` through GitHub Pages after the workflow is enabled in repository settings. By default, it builds for `/jaam-e-jam/` at the GitHub project URL. When `jaamejam.org` is connected as a custom domain, set the repository variable `PUBLIC_BASE_URL` to `/` and configure the domain in GitHub Pages and DNS. This branch does not deploy.
 
 ## Licenses
 

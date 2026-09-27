@@ -1,32 +1,77 @@
 {
   "demo-region": {
     "kind": "region",
-    "name": { "en": "Illustrative region", "fa": "منطقهٔ نمایشی" },
-    "subtitle": { "en": "A sample polygon for testing map controls", "fa": "چندضلعی نمونه برای آزمایش کنترل‌های نقشه" },
-    "body": { "en": "This region is deliberately fictional. Its borders change between three demo snapshots to demonstrate how a dated map could load while the timeline moves.", "fa": "این منطقه ساختگی است. مرزهای آن میان سه برش زمانی نمایشی تغییر می‌کند تا بارگذاری نقشه بر اساس زمان دیده شود." }
+    "name": {
+      "en": "Sample region",
+      "fa": "منطقهٔ نمونه"
+    },
+    "subtitle": {
+      "en": "Region",
+      "fa": "منطقه"
+    },
+    "body": {
+      "en": "Its outline changes across the available dates.",
+      "fa": "مرز این منطقه در تاریخ‌های مختلف تغییر می‌کند."
+    }
   },
   "demo-settlement-a": {
     "kind": "settlement",
-    "name": { "en": "Sample settlement A", "fa": "سکونتگاه نمونهٔ الف" },
-    "subtitle": { "en": "Illustrative place marker", "fa": "نشان مکان نمایشی" },
-    "body": { "en": "A placeholder for the future city and settlement model. The real contribution format and source requirements will be designed after the interface is reviewed.", "fa": "جایگاهی موقت برای مدل آیندهٔ شهر و سکونتگاه. قالب داده و الزامات منابع پس از بررسی رابط طراحی می‌شوند." }
+    "name": {
+      "en": "Sample settlement A",
+      "fa": "سکونتگاه نمونهٔ الف"
+    },
+    "subtitle": {
+      "en": "Settlement",
+      "fa": "سکونتگاه"
+    },
+    "body": {
+      "en": "Explore this settlement alongside the other places and routes on the map.",
+      "fa": "این سکونتگاه را در کنار مکان‌ها و مسیرهای دیگر روی نقشه کاوش کنید."
+    }
   },
   "demo-settlement-b": {
     "kind": "settlement",
-    "name": { "en": "Sample settlement B", "fa": "سکونتگاه نمونهٔ ب" },
-    "subtitle": { "en": "Illustrative place marker", "fa": "نشان مکان نمایشی" },
-    "body": { "en": "A second placeholder marker, included to test selecting and inspecting points on the map.", "fa": "نشان موقت دوم برای آزمایش انتخاب و بررسی نقاط روی نقشه." }
+    "name": {
+      "en": "Sample settlement B",
+      "fa": "سکونتگاه نمونهٔ ب"
+    },
+    "subtitle": {
+      "en": "Settlement",
+      "fa": "سکونتگاه"
+    },
+    "body": {
+      "en": "Explore this settlement alongside the other places and routes on the map.",
+      "fa": "این سکونتگاه را در کنار مکان‌ها و مسیرهای دیگر روی نقشه کاوش کنید."
+    }
   },
   "demo-route": {
     "kind": "route",
-    "name": { "en": "Sample route", "fa": "مسیر نمونه" },
-    "subtitle": { "en": "Illustrative line feature", "fa": "عارضهٔ خطی نمایشی" },
-    "body": { "en": "This line is a visual placeholder for future roads, migrations, campaigns, or exchange routes. It asserts no historical route.", "fa": "این خط نمونه‌ای بصری برای جاده‌ها، مهاجرت‌ها، لشکرکشی‌ها یا مسیرهای مبادلهٔ آینده است و ادعای تاریخی ندارد." }
+    "name": {
+      "en": "Sample route",
+      "fa": "مسیر نمونه"
+    },
+    "subtitle": {
+      "en": "Route",
+      "fa": "مسیر"
+    },
+    "body": {
+      "en": "This route links places on the map and changes course across dates.",
+      "fa": "این مسیر مکان‌های روی نقشه را به هم پیوند می‌دهد و در تاریخ‌های مختلف تغییر می‌کند."
+    }
   },
   "demo-event": {
     "kind": "event",
-    "name": { "en": "Sample event", "fa": "رویداد نمونه" },
-    "subtitle": { "en": "Illustrative event marker", "fa": "نشان رویداد نمایشی" },
-    "body": { "en": "This event marker is fictional and exists only to test the event layer and information panel.", "fa": "این نشان رویداد ساختگی است و تنها برای آزمایش لایهٔ رویداد و پنل اطلاعات به کار می‌رود." }
+    "name": {
+      "en": "Sample event",
+      "fa": "رویداد نمونه"
+    },
+    "subtitle": {
+      "en": "Event",
+      "fa": "رویداد"
+    },
+    "body": {
+      "en": "View this event in its geographic and chronological context.",
+      "fa": "این رویداد را در بستر جغرافیایی و زمانی آن ببینید."
+    }
   }
 }

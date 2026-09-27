@@ -1,7 +1,22 @@
 {
-  "demo-region": { "en": "Illustrative region", "fa": "منطقهٔ نمایشی" },
-  "demo-settlement-a": { "en": "Sample settlement A", "fa": "سکونتگاه نمونهٔ الف" },
-  "demo-settlement-b": { "en": "Sample settlement B", "fa": "سکونتگاه نمونهٔ ب" },
-  "demo-route": { "en": "Sample route", "fa": "مسیر نمونه" },
-  "demo-event": { "en": "Sample event", "fa": "رویداد نمونه" }
+  "demo-region": {
+    "en": "Sample region",
+    "fa": "منطقهٔ نمونه"
+  },
+  "demo-settlement-a": {
+    "en": "Sample settlement A",
+    "fa": "سکونتگاه نمونهٔ الف"
+  },
+  "demo-settlement-b": {
+    "en": "Sample settlement B",
+    "fa": "سکونتگاه نمونهٔ ب"
+  },
+  "demo-route": {
+    "en": "Sample route",
+    "fa": "مسیر نمونه"
+  },
+  "demo-event": {
+    "en": "Sample event",
+    "fa": "رویداد نمونه"
+  }
 }
