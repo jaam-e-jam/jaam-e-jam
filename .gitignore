@@ -5,6 +5,7 @@
 .nitro
 .cache
 dist
+/public/atlas/
 
 # Node dependencies
 node_modules

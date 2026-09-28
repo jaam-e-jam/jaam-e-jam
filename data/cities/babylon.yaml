@@ -1,0 +1,33 @@
+presence:
+  - from: "1800 BCE"
+    to: "30 BCE"
+    sources: [unesco]
+labels:
+  - from: "1800 BCE"
+    to: "30 BCE"
+    text: { en: Babylon, pes: بابل }
+    sources: [unesco]
+locations:
+  - from: "1800 BCE"
+    to: "30 BCE"
+    point: [44.42083, 32.54197]
+    sources: [unesco]
+levels:
+  - from: "1800 BCE"
+    to: "627 BCE"
+    value: 4
+  - from: "626 BCE"
+    to: "539 BCE"
+    value: 5
+  - from: "538 BCE"
+    to: "30 BCE"
+    value: 4
+descriptions:
+  - from: "1800 BCE"
+    to: "30 BCE"
+    markdown:
+      en: "Babylon was a major Mesopotamian city associated with Hammurabi and later the Neo-Babylonian kings. It was their capital from 626 to 539 BCE."
+      pes: "بابل شهری بزرگ در بین‌النهرین بود که با حمورابی و سپس شاهان نو بابلی پیوند داشت. از ۶۲۶ تا ۵۳۹ پیش از میلاد پایتخت آنان بود."
+    sources: [unesco]
+sources:
+  unesco: "UNESCO World Heritage Centre, [Babylon](https://whc.unesco.org/en/list/278), history and site coordinates."

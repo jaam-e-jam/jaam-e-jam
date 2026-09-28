@@ -69,6 +69,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .detail-content h3 { margin: 0; color: #a07348; font-size: 12px; font-weight: 600; }
 .detail-rule { width: 32px; height: 2px; margin: 19px 0; background: #c49a62; }
 .detail-content p { margin: 14px 0 0; color: #697773; font-size: 13px; line-height: 1.7; }
+.detail-markdown p { margin: 14px 0 0; }
+.detail-markdown a, .detail-sources a { color: var(--teal); text-decoration: underline; text-underline-offset: 2px; }
+.detail-sources { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); }
+.detail-sources h3 { color: #536760; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.detail-sources ul { margin: 10px 0 0; padding-inline-start: 18px; color: #697773; font-size: 11px; line-height: 1.55; }
+.detail-sources li + li { margin-top: 7px; }
 .detail-contribute { display: flex; align-items: center; justify-content: space-between; padding: 15px 23px; border-radius: 0 0 9px 9px; color: #fff; background: var(--teal); text-decoration: none; font-size: 12px; font-weight: 700; transition: background .2s; }
 .map-status { position: absolute; z-index: 4; top: 50%; left: 50%; display: flex; align-items: center; gap: 10px; padding: 12px 17px; border: 1px solid var(--line); border-radius: 7px; background: #fffdf8; box-shadow: var(--shadow); color: var(--ink); font-size: 12px; transform: translate(-50%, -50%); }
 .timeline-panel { position: absolute; z-index: 9; left: 50%; bottom: 25px; width: calc(100% - 48px); height: 160px; padding: 15px 24px 12px; border: 1px solid rgba(46, 74, 70, .2); border-radius: 14px; background: rgba(250, 248, 242, .94); box-shadow: 0 12px 42px rgba(25, 45, 40, .18); backdrop-filter: blur(20px); transform: translateX(-50%); }

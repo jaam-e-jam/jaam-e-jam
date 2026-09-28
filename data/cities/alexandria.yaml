@@ -1,0 +1,27 @@
+presence:
+  - from: "331 BCE"
+    to: present
+    sources: [unesco]
+labels:
+  - from: "331 BCE"
+    to: present
+    text: { en: Alexandria, pes: اسکندریه }
+    sources: [unesco]
+locations:
+  - from: "331 BCE"
+    to: present
+    point: [29.91667, 31.2]
+    sources: [unesco]
+levels:
+  - from: "331 BCE"
+    to: present
+    value: 5
+descriptions:
+  - from: "331 BCE"
+    to: present
+    markdown:
+      en: "Founded on Egypt's Mediterranean coast under Alexander, Alexandria became a centre of scholarship and exchange under the Ptolemies."
+      pes: "اسکندریه در ساحل مدیترانه‌ای مصر به فرمان اسکندر بنیان گذاشته شد و در دورهٔ بطلمیوسی به مرکز دانش و دادوستد بدل شد."
+    sources: [unesco]
+sources:
+  unesco: "Egyptian Ministry of Culture, [Alexandria, ancient remains and the new library](https://whc.unesco.org/en/tentativelists/1822/), UNESCO tentative-list submission, history and coordinates."

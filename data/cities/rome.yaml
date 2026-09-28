@@ -1,0 +1,27 @@
+presence:
+  - from: "750 BCE"
+    to: present
+    sources: [pleiades]
+labels:
+  - from: "750 BCE"
+    to: present
+    text: { en: Rome, pes: رم, la: Roma }
+    sources: [pleiades]
+locations:
+  - from: "750 BCE"
+    to: present
+    point: [12.4862, 41.8917]
+    sources: [pleiades]
+levels:
+  - from: "750 BCE"
+    to: present
+    value: 5
+descriptions:
+  - from: "750 BCE"
+    to: present
+    markdown:
+      en: "Rome grew into the centre of the Roman Republic and Empire. Its ancient centre lies within the modern city."
+      pes: "رم به مرکز جمهوری و سپس امپراتوری روم بدل شد. مرکز باستانی آن در شهر امروزی قرار دارد."
+    sources: [pleiades]
+sources:
+  pleiades: "Pleiades, [Roma](https://pleiades.stoa.org/places/423025), place record and representative point (CC BY 3.0)."

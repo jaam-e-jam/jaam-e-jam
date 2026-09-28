@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import type { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import MarkdownIt from 'markdown-it'
 import type { SkyBackdrop } from './utils/sky-backdrop'
 
 interface AtlasFeature {
   type: 'Feature'
-  properties: { id: string; kind: 'region' | 'settlement' | 'route' | 'event'; name: string }
+  properties: { id: string; kind: 'region' | 'settlement' | 'route' | 'event'; name: string; level?: number; name_en?: string; name_pes?: string; search?: string }
   geometry: { type: string; coordinates: unknown }
 }
 interface AtlasCollection { type: 'FeatureCollection'; features: AtlasFeature[] }
 interface Snapshot { from: number; to: number; file: string }
-interface Detail { kind: string; name: Record<'en' | 'fa', string>; subtitle: Record<'en' | 'fa', string>; body: Record<'en' | 'fa', string> }
+interface Detail { descriptions: { from: number; to: number; markdown: Record<'en' | 'pes', string>; sources: string[] }[]; sources: Record<string, string> }
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -38,8 +39,7 @@ const visible = reactive({ region: true, settlement: true, route: true, event: t
 const mapElement = ref<HTMLElement | null>(null)
 const skyCanvas = ref<HTMLCanvasElement | null>(null)
 const snapshots = ref<Snapshot[]>([])
-const detail = ref<Record<string, Detail> | null>(null)
-const catalog = ref<Record<string, Record<'en' | 'fa', string>>>({})
+const detail = ref<Record<string, Detail>>({})
 const currentFile = ref('')
 const contributionUrl = 'https://github.com/jaam-e-jam/jaam-e-jam/issues/new'
 const terrainExaggeration = 10
@@ -53,6 +53,9 @@ let skyDisposed = false
 let playback: ReturnType<typeof setInterval> | null = null
 let requestVersion = 0
 const cache = new Map<string, AtlasCollection>()
+const markdown = new MarkdownIt({ html: false, linkify: true })
+const dataLanguage = computed(() => language.value === 'fa' ? 'pes' : 'en')
+const settlementLabelLayers = [1, 2, 3, 4, 5].map(level => `atlas-settlement-label-${level}`)
 
 const copy = {
   en: {
@@ -60,7 +63,7 @@ const copy = {
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
-    about: 'About this atlas', contribute: 'Contribute', details: 'Details',
+    about: 'About this atlas', contribute: 'Contribute', details: 'Details', city: 'City', sources: 'Sources',
     infoTitle: 'A map built together', infoBody: 'Jaam-e Jam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
@@ -70,7 +73,7 @@ const copy = {
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', classical: 'دوران کلاسیک', middleAges: 'قرون وسطی', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
-    about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات',
+    about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات', city: 'شهر', sources: 'منابع',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
     close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
     start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', today: 'امروز'
@@ -113,12 +116,22 @@ const eraRanges = [
   { from: 1500, to: 1800, label: 'earlyModern' },
   { from: 1800, to: 2026, label: 'modern' }
 ] as const
-const selectedDetail = computed(() => selectedId.value ? detail.value?.[selectedId.value] : undefined)
+const selectedDetail = computed(() => selectedId.value ? detail.value[selectedId.value] : undefined)
+const selectedFeature = computed(() => currentFeatures.value.find(feature => feature.properties.id === selectedId.value))
+const selectedDescription = computed(() => selectedDetail.value?.descriptions.find(item => year.value >= item.from && year.value <= item.to))
+const selectedName = computed(() => {
+  const properties = selectedFeature.value?.properties
+  return (dataLanguage.value === 'pes' ? properties?.name_pes : properties?.name_en) || properties?.name || ''
+})
+const renderedDescription = computed(() => markdown.render(selectedDescription.value?.markdown[dataLanguage.value] || ''))
+const selectedSources = computed(() => selectedDescription.value?.sources.map(id => selectedDetail.value?.sources[id]).filter((source): source is string => !!source) || [])
 const searchResults = computed(() => currentFeatures.value.filter(feature => {
   if (!search.value.trim()) return false
-  const translated = catalog.value[feature.properties.id]?.[language.value] || ''
-  return `${feature.properties.name} ${translated}`.toLowerCase().includes(search.value.trim().toLowerCase())
+  return `${feature.properties.name} ${feature.properties.search || ''}`.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase())
 }).filter((feature, index, list) => list.findIndex(item => item.properties.id === feature.properties.id) === index))
+function featureName(feature: AtlasFeature) {
+  return (dataLanguage.value === 'pes' ? feature.properties.name_pes : feature.properties.name_en) || feature.properties.name
+}
 
 async function loadSnapshot() {
   if (!mapReady.value || !map) return
@@ -148,11 +161,17 @@ function updateVisibility() {
   if (!mapReady.value || !map) return
   const groups: Record<keyof typeof visible, string[]> = {
     region: ['atlas-region-fill', 'atlas-region-line'],
-    settlement: ['atlas-settlements', 'atlas-settlement-labels'],
+    settlement: ['atlas-settlements', ...settlementLabelLayers],
     route: ['atlas-routes'], event: ['atlas-events']
   }
   for (const kind of Object.keys(groups) as (keyof typeof visible)[]) {
     for (const id of groups[kind]) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible[kind] ? 'visible' : 'none')
+  }
+}
+function updateMapLanguage() {
+  if (!mapReady.value || !map) return
+  for (const id of settlementLabelLayers) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']])
   }
 }
 
@@ -161,11 +180,11 @@ async function openFeature(id: string) {
   layersOpen.value = false
   searchOpen.value = false
   search.value = ''
-  if (!detail.value) {
+  if (!detail.value[id]) {
     try {
-      const response = await fetch(asset('demo/details.json'))
-      if (response.ok) detail.value = await response.json() as Record<string, Detail>
-    } catch { /* The map remains usable when the optional detail file is unavailable. */ }
+      const response = await fetch(asset(`atlas/details/${id}.json`))
+      if (response.ok) detail.value[id] = await response.json() as Detail
+    } catch { /* The map remains usable when an individual detail file is unavailable. */ }
   }
   const feature = currentFeatures.value.find(item => item.properties.id === id)
   if (feature?.geometry.type === 'Point') {
@@ -237,15 +256,14 @@ function togglePlayback() {
 }
 watch(year, loadSnapshot)
 watch(visible, updateVisibility)
+watch(language, updateMapLanguage)
 
 onMounted(async () => {
   try {
-    const response = await fetch(asset('demo/time-index.json'))
+    const response = await fetch(asset('atlas/time-index.json'))
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const index = await response.json() as { snapshots: Snapshot[] }
     snapshots.value = index.snapshots
-    const catalogResponse = await fetch(asset('demo/catalog.json'))
-    if (catalogResponse.ok) catalog.value = await catalogResponse.json() as Record<string, Record<'en' | 'fa', string>>
     const maplibre = await import('maplibre-gl')
     maplibre.setWorkerUrl(workerUrl)
     if (!mapElement.value) return
@@ -265,10 +283,12 @@ onMounted(async () => {
       map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': '#3d7884', 'fill-opacity': 0.24 } })
       map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': '#245b68', 'line-width': 2.5, 'line-opacity': 0.85, 'line-dasharray': [3, 2] } })
       map.addLayer({ id: 'atlas-routes', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'route'], paint: { 'line-color': '#bd6b45', 'line-width': 3, 'line-dasharray': [2, 2] } })
-      map.addLayer({ id: 'atlas-settlements', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], paint: { 'circle-radius': 7, 'circle-color': '#9b4e38', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff9ef' } })
+      map.addLayer({ id: 'atlas-settlements', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'level'], 1, 3.5, 5, 9], 'circle-color': '#9b4e38', 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff9ef' } })
       map.addLayer({ id: 'atlas-events', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'event'], paint: { 'circle-radius': 8, 'circle-color': '#d8a03e', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff9ef' } })
-      map.addLayer({ id: 'atlas-settlement-labels', type: 'symbol', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 1.5], 'text-anchor': 'top' }, paint: { 'text-color': '#263d40', 'text-halo-color': '#fff9ef', 'text-halo-width': 1.5 } })
-      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-routes', 'atlas-settlements', 'atlas-events', 'atlas-settlement-labels']) {
+      for (const level of [1, 2, 3, 4, 5]) {
+        map.addLayer({ id: `atlas-settlement-label-${level}`, type: 'symbol', source: 'atlas', minzoom: ({ 1: 8, 2: 7, 3: 5.5, 4: 4, 5: 2.5 } as Record<number, number>)[level], filter: ['all', ['==', ['get', 'kind'], 'settlement'], ['==', ['get', 'level'], level]], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-offset': [0, 1.65], 'text-anchor': 'top' }, paint: { 'text-color': '#263d40', 'text-halo-color': '#fff9ef', 'text-halo-width': 1.5 } })
+      }
+      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
         map.on('mouseenter', id, () => { if (map) map.getCanvas().style.cursor = 'pointer' })
         map.on('mouseleave', id, () => { if (map) map.getCanvas().style.cursor = '' })
         map.on('click', id, event => { const featureId = event.features?.[0]?.properties?.id; if (featureId) void openFeature(String(featureId)) })
@@ -329,7 +349,7 @@ onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback
       <div class="panel-heading"><span>{{ t.search }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="searchOpen = false"><UIcon name="i-lucide-x" /></button></div>
       <UInput v-model="search" autofocus icon="i-lucide-search" :placeholder="t.search" size="lg" class="search-input" />
       <div v-if="search.trim()" class="search-results">
-        <button v-for="feature in searchResults" :key="feature.properties.id" type="button" @click="openFeature(feature.properties.id)"><UIcon :name="feature.properties.kind === 'settlement' ? 'i-lucide-map-pin' : feature.properties.kind === 'route' ? 'i-lucide-route' : 'i-lucide-map'" class="icon" /><span>{{ catalog[feature.properties.id]?.[language] || feature.properties.name }}</span><UIcon name="i-lucide-arrow-up-right" class="icon arrow" /></button>
+        <button v-for="feature in searchResults" :key="feature.properties.id" type="button" @click="openFeature(feature.properties.id)"><UIcon :name="feature.properties.kind === 'settlement' ? 'i-lucide-map-pin' : feature.properties.kind === 'route' ? 'i-lucide-route' : 'i-lucide-map'" class="icon" /><span>{{ featureName(feature) }}</span><UIcon name="i-lucide-arrow-up-right" class="icon arrow" /></button>
         <p v-if="!searchResults.length" class="empty-results">{{ t.noResults }}</p>
       </div>
     </div>
@@ -347,7 +367,7 @@ onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback
     <aside v-if="selectedId || aboutOpen" class="floating-panel detail-panel">
       <div class="panel-heading"><span>{{ aboutOpen ? t.about : t.details }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="selectedId = null; aboutOpen = false"><UIcon name="i-lucide-x" /></button></div>
       <div class="detail-content" v-if="aboutOpen"><span class="detail-glyph">ج</span><h2>{{ t.infoTitle }}</h2><p>{{ t.infoBody }}</p></div>
-      <div class="detail-content" v-else-if="selectedDetail"><span class="detail-type">{{ selectedDetail.kind }}</span><h2>{{ selectedDetail.name[language] }}</h2><h3>{{ selectedDetail.subtitle[language] }}</h3><div class="detail-rule" /><p>{{ selectedDetail.body[language] }}</p></div>
+      <div class="detail-content" v-else-if="selectedDetail && selectedDescription"><span class="detail-type">{{ t.city }}</span><h2>{{ selectedName }}</h2><div class="detail-rule" /><div class="detail-markdown" v-html="renderedDescription" /><div v-if="selectedSources.length" class="detail-sources"><h3>{{ t.sources }}</h3><ul><li v-for="source in selectedSources" :key="source" v-html="markdown.renderInline(source)" /></ul></div></div>
       <div class="detail-content" v-else><p>{{ t.mapLoading }}</p></div>
       <a class="detail-contribute" :href="contributionUrl" target="_blank" rel="noopener noreferrer">{{ t.contribute }}<UIcon name="i-lucide-arrow-up-right" class="icon" /></a>
     </aside>

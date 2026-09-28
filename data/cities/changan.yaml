@@ -1,0 +1,28 @@
+presence:
+  - from: "618 CE"
+    to: "907 CE"
+    sources: [xian]
+labels:
+  - from: "618 CE"
+    to: "907 CE"
+    text: { en: "Chang’an", pes: "چانگ‌آن", zh-Hans: 长安 }
+    sources: [xian]
+locations:
+  - from: "618 CE"
+    to: "907 CE"
+    point: [108.935, 34.25]
+    sources: [urban-plan]
+levels:
+  - from: "618 CE"
+    to: "907 CE"
+    value: 5
+descriptions:
+  - from: "618 CE"
+    to: "907 CE"
+    markdown:
+      en: "Chang’an was the Tang dynasty capital. The point lies near the centre of the documented Sui–Tang city area, southwest of modern Xi’an's centre."
+      pes: "چانگ‌آن پایتخت دودمان تانگ بود. نقطهٔ نقشه نزدیک مرکز محدودهٔ ثبت‌شدهٔ شهر سوئی–تانگ، در جنوب‌غرب مرکز شی‌آن امروزی، قرار دارد."
+    sources: [xian, urban-plan]
+sources:
+  xian: "Xi'an Municipal Government, [Welcome to the ancient city of Xi'an](https://en.xa.gov.cn/MediaCenter/News/1691691384824254465.html), Tang capital period."
+  urban-plan: "[Analysis of the Characteristics and Ideas of Ancient Urban Land-Use: Chang’an City in the Sui and Tang Dynasties](https://www.mdpi.com/2072-4292/15/12/2962), Remote Sensing 15 (2023), city bounding coordinates; point is their bounding-area midpoint."
