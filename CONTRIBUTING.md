@@ -1,7 +1,9 @@
 # Contributing to Jaamejam
 
-The current map features are fictional interface samples. Please discuss a real historical data format before adding factual map data; the city, route, event, and polity schemas are still to be designed.
+City records live at `data/cities/<id>.yaml`, where the filename is the stable ID. The directory supplies the entity type, so neither `id` nor `kind` belongs in the file. Read the [city data schema](docs/cities.md) before editing a record.
 
-For a pull request, explain what changed, where and when it applies, and why. Link reliable sources for additions, corrections, and deletions, ideally with page numbers or stable URLs. Call out uncertainty and conflicting accounts. Keep each pull request focused enough to review. Agents are welcome to prepare proposals and pull requests, but the person submitting one is responsible for checking every claim, geometry, citation, and license compatibility. Core maintainers review and approve changes before merge.
+Attach source IDs to each dated presence, label, location, and description entry. Explain where a representative point comes from, especially when a settlement's exact footprint is uncertain. Date ranges are display intervals supported by the cited evidence, not claims of exact foundation or abandonment. Level is an editorial map size and label-zoom choice. Run `pnpm data:build` to validate and compile the contributed YAML; edit the YAML, not the generated `public/atlas/` files.
+
+For a pull request, explain what changed, where and when it applies, and why. Link reliable sources for additions, corrections, and deletions, ideally with page numbers or stable URLs. Call out uncertainty and conflicting accounts. Keep each pull request focused enough to review. Agents are welcome to prepare proposals and pull requests, but the person submitting one is responsible for checking every claim, geometry, citation, and license compatibility. Core maintainers review and approve changes before merge. Run `pnpm typecheck` and `pnpm generate` before submitting.
 
 Project-authored data contributions are submitted under CC BY 4.0 with credit to Jaamejam Contributors. Code contributions are submitted under PolyForm Shield 1.0.0. Do not submit third-party material unless its license allows the proposed use; identify such material and its license in the pull request.

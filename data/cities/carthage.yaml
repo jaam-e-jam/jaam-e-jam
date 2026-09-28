@@ -1,0 +1,40 @@
+presence:
+  - from: "800 BCE"
+    to: "146 BCE"
+    sources: [unesco]
+  - from: "44 BCE"
+    to: "640 CE"
+    sources: [unesco, pleiades]
+labels:
+  - from: "800 BCE"
+    to: "640 CE"
+    text: { en: Carthage, pes: کارتاژ, la: Carthago }
+    sources: [pleiades]
+locations:
+  - from: "800 BCE"
+    to: "640 CE"
+    point: [10.32306, 36.85306]
+    sources: [pleiades]
+levels:
+  - from: "800 BCE"
+    to: "146 BCE"
+    value: 5
+  - from: "44 BCE"
+    to: "640 CE"
+    value: 4
+descriptions:
+  - from: "800 BCE"
+    to: "146 BCE"
+    markdown:
+      en: "Founded by Phoenicians on the Gulf of Tunis, Carthage became a major Mediterranean trading power before Rome destroyed it in 146 BCE."
+      pes: "کارتاژ را فنیقیان در کنار خلیج تونس بنیان گذاشتند. این شهر پیش از نابودی به دست روم در ۱۴۶ پیش از میلاد، به قدرتی بزرگ در تجارت مدیترانه بدل شد."
+    sources: [unesco]
+  - from: "44 BCE"
+    to: "640 CE"
+    markdown:
+      en: "A Roman Carthage rose on the former Punic city's site and became a major centre of Roman Africa."
+      pes: "کارتاژِ رومی بر جای شهر فنیقی پیشین پدید آمد و به یکی از مراکز مهم آفریقای رومی بدل شد."
+    sources: [unesco]
+sources:
+  unesco: "UNESCO World Heritage Centre, [Archaeological Site of Carthage](https://whc.unesco.org/en/list/37), Punic destruction and Roman refoundation."
+  pleiades: "Pleiades, [Carthago](https://pleiades.stoa.org/places/314921), names and representative point (CC BY 3.0)."

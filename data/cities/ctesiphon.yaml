@@ -1,0 +1,58 @@
+presence:
+  - from: "140 BCE"
+    to: "763 CE"
+    sources: [met, met-collection]
+labels:
+  - from: "140 BCE"
+    to: "763 CE"
+    text: { en: Ctesiphon, pes: تیسفون }
+    search: { en: [Tisfun, Tisfon, al-Madain], pes: [مدائن, المدائن] }
+    sources: [iranica, met]
+locations:
+  - from: "140 BCE"
+    to: "763 CE"
+    point: [44.58081, 33.10008]
+    sources: [study, iranica]
+levels:
+  - from: "140 BCE"
+    to: "101 BCE"
+    value: 3
+  - from: "100 BCE"
+    to: "2 BCE"
+    value: 4
+  - from: "1 BCE"
+    to: "637 CE"
+    value: 5
+  - from: "638 CE"
+    to: "763 CE"
+    value: 3
+descriptions:
+  - from: "140 BCE"
+    to: "101 BCE"
+    markdown:
+      en: "After taking nearby Seleucia around 140 BCE, the Parthians established an army garrison at the existing village of Ctesiphon across the Tigris. It was a military settlement before it became a royal capital."
+      pes: "اشکانیان پس از تصرف سلوکیه در حدود ۱۴۰ پیش از میلاد، در روستای تیسفون در آن سوی دجله پادگانی برپا کردند. تیسفون پیش از آن‌که پایتخت شاهی شود، استقرارگاهی نظامی بود."
+    sources: [met, iranica]
+  - from: "100 BCE"
+    to: "225 CE"
+    markdown:
+      en: "The former garrison developed into an Arsacid winter residence and capital, probably during the first century BCE. The exact date of that change is uncertain."
+      pes: "پادگان پیشین، احتمالاً در سدهٔ یکم پیش از میلاد، به اقامتگاه زمستانی و پایتخت اشکانیان بدل شد. تاریخ دقیق این دگرگونی روشن نیست."
+    sources: [met, iranica]
+  - from: "226 CE"
+    to: "637 CE"
+    markdown:
+      en: "Ctesiphon was the Sasanian Empire's capital and coronation city. Its wider metropolitan area extended along both banks of the Tigris."
+      pes: "تیسفون پایتخت و جایگاه تاج‌گذاری شاهان ساسانی بود. مجموعهٔ شهری آن در امتداد دو سوی دجله گسترش یافت."
+    sources: [iranica, met]
+  - from: "638 CE"
+    to: "763 CE"
+    markdown:
+      en: "The urban area remained inhabited after its conquest in 637 CE and was known within the wider al-Madā’in area. It declined as Baghdad rose in the eighth century."
+      pes: "محدودهٔ شهری پس از فتح در ۶۳۷ میلادی همچنان مسکونی ماند و در گسترهٔ مدائن شناخته می‌شد. با برآمدن بغداد در سدهٔ هشتم رو به افول گذاشت."
+    sources: [met, met-collection]
+sources:
+  met: "Blair Fowlkes-Childs, [Ctesiphon](https://www.metmuseum.org/essays/ctesiphon), The Metropolitan Museum of Art, 2016, sections on Parthian, Sasanian, and early Islamic Ctesiphon."
+  iranica: "Jens Kröger, [Ctesiphon](https://www.iranicaonline.org/articles/ctesiphon/), Encyclopaedia Iranica VI/4 (1993), pp. 446–448, especially the Parthian period and site-topography sections."
+  study: "[Behind the facades of Ctesiphon](https://link.springer.com/article/10.1007/s12520-026-02556-9), Archaeological and Anthropological Sciences (2026), location of the wider Ctesiphon archaeological area at 33°06′00.3″ N, 44°34′50.9″ E. This representative point is not the pinpointed site of the earlier Parthian garrison."
+  met-collection: "The Metropolitan Museum of Art, [Ceramic Fragment](https://www.metmuseum.org/art/collection/search/448772), evidence of continued occupation of the Ctesiphon/al-Madā’in area in the early Islamic period."

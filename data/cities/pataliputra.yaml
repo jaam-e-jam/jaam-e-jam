@@ -1,0 +1,29 @@
+presence:
+  - from: "400 BCE"
+    to: "600 CE"
+    sources: [asi]
+labels:
+  - from: "400 BCE"
+    to: "600 CE"
+    text: { en: Pāṭaliputra, pes: پاتالی‌پوترا }
+    search: { en: [Pataliputra, Patna] }
+    sources: [asi]
+locations:
+  - from: "400 BCE"
+    to: "600 CE"
+    point: [85.1194, 25.6022]
+    sources: [getty, asi]
+levels:
+  - from: "400 BCE"
+    to: "600 CE"
+    value: 5
+descriptions:
+  - from: "400 BCE"
+    to: "600 CE"
+    markdown:
+      en: "Pāṭaliputra, near modern Patna, was a capital under the Maurya and Gupta dynasties. The point represents the broad city area; its ancient footprint is still debated."
+      pes: "پاتالی‌پوترا، نزدیک پاتنای امروزی، در دوره‌های موریا و گوپتا پایتخت بود. نقطهٔ نقشه محدودهٔ کلی شهر را نشان می‌دهد و جای دقیق شهر باستانی هنوز محل بحث است."
+    sources: [asi, getty]
+sources:
+  asi: "Archaeological Survey of India, [Pāṭaliputra excavations](https://ignca.gov.in/Asi_data/49311.pdf), chapter 2, 'Previous explorations and excavations at Pāṭaliputra'."
+  getty: "Getty Research Institute, [Patna/Pāṭaliputra](https://www.getty.edu/vow/TGNFullDisplay?subjectid=7001575), TGN 7001575, representative modern location."

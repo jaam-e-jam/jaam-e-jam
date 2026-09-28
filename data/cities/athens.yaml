@@ -1,0 +1,27 @@
+presence:
+  - from: "750 BCE"
+    to: present
+    sources: [pleiades]
+labels:
+  - from: "750 BCE"
+    to: present
+    text: { en: Athens, pes: آتن, grc: Ἀθῆναι }
+    sources: [pleiades]
+locations:
+  - from: "750 BCE"
+    to: present
+    point: [23.72395, 37.97165]
+    sources: [pleiades]
+levels:
+  - from: "750 BCE"
+    to: present
+    value: 5
+descriptions:
+  - from: "750 BCE"
+    to: present
+    markdown:
+      en: "Athens was a major Greek city-state and the principal city of Attica."
+      pes: "آتن یکی از شهر-دولت‌های مهم یونان و شهر اصلی آتیک بود."
+    sources: [pleiades]
+sources:
+  pleiades: "Pleiades, [Athenae](https://pleiades.stoa.org/places/579885), place record and representative point (CC BY 3.0)."

@@ -1,0 +1,28 @@
+presence:
+  - from: "3000 BCE"
+    to: "640 CE"
+    sources: [unesco]
+labels:
+  - from: "3000 BCE"
+    to: "640 CE"
+    text: { en: Memphis, pes: ممفیس }
+    sources: [unesco]
+locations:
+  - from: "3000 BCE"
+    to: "640 CE"
+    point: [31.26106, 29.8555]
+    sources: [unesco-map]
+levels:
+  - from: "3000 BCE"
+    to: "640 CE"
+    value: 5
+descriptions:
+  - from: "3000 BCE"
+    to: "640 CE"
+    markdown:
+      en: "Memphis stood near the Nile Delta and served as an administrative capital of ancient Egypt across several periods."
+      pes: "ممفیس در نزدیکی دلتای نیل قرار داشت و در دوره‌های گوناگون مرکز اداری مصر باستان بود."
+    sources: [unesco]
+sources:
+  unesco: "UNESCO World Heritage Centre, [Memphis and its Necropolis](https://whc.unesco.org/en/list/86), historical overview."
+  unesco-map: "UNESCO World Heritage Centre, [Site of Memphis](https://whc.unesco.org/en/list/86/maps/), component 86-001 coordinates."

@@ -1,0 +1,40 @@
+presence:
+  - from: "330 CE"
+    to: present
+    sources: [unesco]
+labels:
+  - from: "330 CE"
+    to: "1452 CE"
+    text: { en: Constantinople, pes: قسطنطنیه }
+    search: { en: [Istanbul], pes: [استانبول] }
+    sources: [unesco]
+  - from: "1453 CE"
+    to: present
+    text: { en: Istanbul, pes: استانبول, tr: İstanbul }
+    search: { en: [Constantinople], pes: [قسطنطنیه] }
+    sources: [unesco]
+locations:
+  - from: "330 CE"
+    to: present
+    point: [28.98333, 41.00833]
+    sources: [unesco-map]
+levels:
+  - from: "330 CE"
+    to: present
+    value: 5
+descriptions:
+  - from: "330 CE"
+    to: "1452 CE"
+    markdown:
+      en: "Constantinople was the capital of the Eastern Roman Empire on the Bosphorus. This is a conventional map label; other names also circulated."
+      pes: "قسطنطنیه در کنار بسفر پایتخت امپراتوری روم شرقی بود. این نام، برچسب قراردادی نقشه است و نام‌های دیگری نیز به کار می‌رفتند."
+    sources: [unesco]
+  - from: "1453 CE"
+    to: present
+    markdown:
+      en: "Istanbul became the Ottoman capital after 1453 and remains a major city spanning the Bosphorus. The map's change of label does not imply an abrupt end to other names."
+      pes: "استانبول پس از ۱۴۵۳ پایتخت عثمانی شد و همچنان شهری بزرگ در دو سوی بسفر است. تغییر برچسب نقشه به معنای ناپدیدشدن ناگهانی نام‌های دیگر نیست."
+    sources: [unesco]
+sources:
+  unesco: "UNESCO World Heritage Centre, [Historic Areas of Istanbul](https://whc.unesco.org/en/list/356), city history and historic peninsula."
+  unesco-map: "UNESCO World Heritage Centre, [Historic Areas of Istanbul maps](https://whc.unesco.org/en/list/356/maps/), representative point on the historic peninsula (Sultanahmet component)."
