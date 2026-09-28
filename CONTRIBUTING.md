@@ -1,6 +1,6 @@
 # Contributing to Jaamejam
 
-City records live at `data/cities/<id>.yaml`, where the filename is the stable ID. The directory supplies the entity type, so neither `id` nor `kind` belongs in the file. See the existing records for the current city format. Dates use quoted `"500 BCE"` or `"500 CE"`; `present` means the end of the current timeline. A record has dated `presence`, `labels`, `locations`, `levels` (1–5), and short Markdown `descriptions`, plus a `sources` bibliography. The build requires English (`en`) and Iranian Persian (`pes`) map labels and descriptions; other BCP 47 language tags can be added. Coordinates are `[longitude, latitude]`.
+City records live at `data/cities/<id>.yaml`, where the filename is the stable ID. The directory supplies the entity type, so neither `id` nor `kind` belongs in the file. Read the [city data schema](docs/cities.md) before editing a record.
 
 Attach source IDs to each dated presence, label, location, and description entry. Explain where a representative point comes from, especially when a settlement's exact footprint is uncertain. Date ranges are display intervals supported by the cited evidence, not claims of exact foundation or abandonment. Level is an editorial map size and label-zoom choice. Run `pnpm data:build` to validate and compile the contributed YAML; edit the YAML, not the generated `public/atlas/` files.
 

@@ -5,7 +5,7 @@ presence:
 labels:
   - from: "518 BCE"
     to: "330 BCE"
-    text: { en: Pārsa, pes: پارسه, peo-Latn: Pārsa }
+    text: { en: Persepolis, pes: پارسه, peo-Latn: Pārsa }
     search: { en: [Persepolis], pes: [تخت جمشید] }
     sources: [iranica]
 locations:
@@ -22,7 +22,7 @@ descriptions:
     to: "330 BCE"
     markdown:
       en: "Pārsa, often called Persepolis in English, was an Achaemenid royal centre. Darius I began its monumental terrace around 518 BCE."
-      pes: "پارسه، که در انگلیسی بیشتر با نام پرسپولیس شناخته می‌شود، مرکزی شاهی در دورهٔ هخامنشی بود. داریوش یکم ساخت مجموعهٔ باشکوه آن را حدود ۵۱۸ پیش از میلاد آغاز کرد."
+      pes: "پارسه، که در انگلیسی بیشتر با نام پرسپولیس شناخته می‌شود، مرکزی شاهنشاهی در دورهٔ هخامنشی بود. داریوش یکم ساخت مجموعهٔ باشکوه آن را حدود ۵۱۸ پیش از میلاد آغاز کرد."
     sources: [unesco, iranica]
 sources:
   unesco: "UNESCO World Heritage Centre, [Persepolis](https://whc.unesco.org/en/list/114), history and site coordinates."
