@@ -32,6 +32,8 @@ const selectedId = ref<string | null>(null)
 const isGlobe = ref(false)
 const terrainOn = ref(false)
 const playing = ref(false)
+const playbackSpeed = ref(1)
+const playbackSpeeds = [1, 2, 5, 20] as const
 const mapReady = ref(false)
 const mapError = ref('')
 const currentFeatures = ref<AtlasFeature[]>([])
@@ -50,8 +52,9 @@ let map: MapLibreMap | null = null
 let skyBackdrop: SkyBackdrop | null = null
 let skyLoading: Promise<void> | null = null
 let skyDisposed = false
-let playback: ReturnType<typeof setInterval> | null = null
+let playbackFrame: number | null = null
 let requestVersion = 0
+let pendingFile = ''
 const cache = new Map<string, AtlasCollection>()
 const markdown = new MarkdownIt({ html: false, linkify: true })
 const dataLanguage = computed(() => language.value === 'fa' ? 'pes' : 'en')
@@ -59,28 +62,28 @@ const settlementLabelLayers = [1, 2, 3, 4, 5].map(level => `atlas-settlement-lab
 
 const copy = {
   en: {
-    atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
+    siteName: 'Jaam-e Jam', atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
     about: 'About this atlas', contribute: 'Contribute', details: 'Details', city: 'City', sources: 'Sources',
     infoTitle: 'A map built together', infoBody: 'Jaam-e Jam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
-    start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', today: 'Today'
+    start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', speed: 'Playback speed', today: 'Today'
   },
   fa: {
-    atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
+    siteName: 'جام جم', atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', classical: 'دوران کلاسیک', middleAges: 'قرون وسطی', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
     about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات', city: 'شهر', sources: 'منابع',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
     close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
-    start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', today: 'امروز'
+    start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', speed: 'سرعت پخش', today: 'امروز'
   }
 }
 const t = computed(() => copy[language.value])
-useHead(() => ({ htmlAttrs: { lang: language.value, dir: language.value === 'fa' ? 'rtl' : 'ltr' }, link: [{ rel: 'icon', type: 'image/png', href: asset('favicon.png') }, { rel: 'shortcut icon', href: asset('favicon.ico') }] }))
+useHead(() => ({ title: language.value === 'fa' ? t.value.siteName : `${t.value.siteName} — ${t.value.atlas}`, htmlAttrs: { lang: language.value, dir: language.value === 'fa' ? 'rtl' : 'ltr' }, link: [{ rel: 'icon', type: 'image/png', href: asset('favicon.png') }, { rel: 'shortcut icon', href: asset('favicon.ico') }] }))
 
 function displayYear(value: number) {
   const magnitude = new Intl.NumberFormat(language.value === 'fa' ? 'fa-IR' : 'en-US').format(Math.abs(value))
@@ -136,8 +139,14 @@ function featureName(feature: AtlasFeature) {
 async function loadSnapshot() {
   if (!mapReady.value || !map) return
   const snapshot = snapshots.value.find(item => year.value >= item.from && year.value <= item.to)
-  if (!snapshot || snapshot.file === currentFile.value) return
+  if (!snapshot) return
+  if (snapshot.file === currentFile.value) {
+    if (pendingFile) { requestVersion++; pendingFile = '' }
+    return
+  }
+  if (snapshot.file === pendingFile) return
   const version = ++requestVersion
+  pendingFile = snapshot.file
   try {
     let collection = cache.get(snapshot.file)
     if (!collection) {
@@ -153,7 +162,9 @@ async function loadSnapshot() {
     currentFile.value = snapshot.file
     if (selectedId.value && !collection.features.some(feature => feature.properties.id === selectedId.value)) selectedId.value = null
   } catch (error) {
-    mapError.value = `Map data could not load: ${error instanceof Error ? error.message : String(error)}`
+    if (version === requestVersion) mapError.value = `Map data could not load: ${error instanceof Error ? error.message : String(error)}`
+  } finally {
+    if (version === requestVersion) pendingFile = ''
   }
 }
 
@@ -240,25 +251,43 @@ function toggleTerrain() {
 }
 function zoomIn() { map?.zoomIn() }
 function zoomOut() { map?.zoomOut() }
-function stepYear(direction: number) {
-  const amount = year.value < -1000 ? 500 : year.value < 1000 ? 100 : 25
-  const next = Math.max(-10000, Math.min(2026, year.value + direction * amount))
-  year.value = next === 0 ? direction > 0 ? 1 : -1 : next
+function advanceYear(value: number, amount: number) {
+  let next = value + amount
+  if (value < 0 && next >= 0) next++
+  if (value > 0 && next <= 0) next--
+  return Math.max(-10000, Math.min(2026, next))
 }
-function stopPlayback() { if (playback) clearInterval(playback); playback = null; playing.value = false }
+function stepYear(direction: number) { year.value = advanceYear(year.value, direction) }
+function stopPlayback() {
+  if (playbackFrame !== null) cancelAnimationFrame(playbackFrame)
+  playbackFrame = null
+  playing.value = false
+}
+function playbackTick() {
+  const next = advanceYear(year.value, playbackSpeed.value)
+  if (next === year.value) return stopPlayback()
+  year.value = next
+  if (next >= 2026) return stopPlayback()
+  playbackFrame = requestAnimationFrame(playbackTick)
+}
 function togglePlayback() {
   if (playing.value) return stopPlayback()
+  if (year.value >= 2026) return
   playing.value = true
-  playback = setInterval(() => {
-    if (progress.value >= 1000) return stopPlayback()
-    progress.value = Math.min(1000, progress.value + 7)
-  }, 280)
+  playbackFrame = requestAnimationFrame(playbackTick)
+}
+function handlePlaybackShortcut(event: KeyboardEvent) {
+  if (event.code !== 'Space' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+  if (event.target instanceof Element && event.target.closest('button, a, input, select, textarea, [contenteditable], [role="menuitem"], [role="option"], [role="switch"], [role="slider"]')) return
+  event.preventDefault()
+  if (!event.repeat) togglePlayback()
 }
 watch(year, loadSnapshot)
 watch(visible, updateVisibility)
 watch(language, updateMapLanguage)
 
 onMounted(async () => {
+  document.addEventListener('keydown', handlePlaybackShortcut)
   try {
     const response = await fetch(asset('atlas/time-index.json'))
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -302,7 +331,7 @@ onMounted(async () => {
     mapError.value = error instanceof Error ? error.message : String(error)
   }
 })
-onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback(); map?.remove(); map = null })
+onBeforeUnmount(() => { document.removeEventListener('keydown', handlePlaybackShortcut); skyDisposed = true; skyBackdrop?.dispose(); stopPlayback(); map?.remove(); map = null })
 </script>
 
 <template>
@@ -315,7 +344,7 @@ onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback
     <header class="topbar">
       <button class="brand" type="button" @click="aboutOpen = !aboutOpen; layersOpen = false; selectedId = null" :aria-label="t.about">
         <img class="brand-symbol" :src="asset('jaamejam-logo.png')" alt="" width="46" height="46" />
-        <span class="brand-copy"><strong>Jaam-e Jam</strong><small>{{ t.atlas }}</small></span>
+        <span class="brand-copy"><strong>{{ t.siteName }}</strong><small>{{ t.atlas }}</small></span>
       </button>
       <div class="header-actions">
         <UDropdownMenu :items="languageItems" :content="{ align: 'end', sideOffset: 8 }" :ui="{ content: 'min-w-36 z-50' }">
@@ -376,10 +405,15 @@ onBeforeUnmount(() => { skyDisposed = true; skyBackdrop?.dispose(); stopPlayback
 
     <footer class="timeline-panel">
       <div class="timeline-topline">
-        <div class="timeline-title"><span class="timeline-icon"><UIcon name="i-lucide-clock-3" /></span><span><strong>{{ displayYear(year) }}</strong></span></div>
-        <div class="timeline-actions"><button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button><button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button><button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button></div>
+        <div class="timeline-title"><span class="timeline-icon"><UIcon name="i-lucide-clock-3" /></span><span><strong :dir="language === 'fa' ? 'rtl' : 'ltr'">{{ displayYear(year) }}</strong></span></div>
+        <div class="timeline-actions">
+          <button type="button" :aria-label="t.earlier" @click="stepYear(-1)"><UIcon name="i-lucide-chevron-left" class="icon" /></button>
+          <button type="button" class="play-button" :aria-label="playing ? t.pause : t.start" @click="togglePlayback"><UIcon :name="playing ? 'i-lucide-pause' : 'i-lucide-play'" class="icon" /></button>
+          <button type="button" :aria-label="t.later" @click="stepYear(1)"><UIcon name="i-lucide-chevron-right" class="icon" /></button>
+          <label class="timeline-speed"><span class="sr-only">{{ t.speed }}</span><select v-model.number="playbackSpeed" :aria-label="t.speed"><option v-for="speed in playbackSpeeds" :key="speed" :value="speed">{{ speed }}×</option></select><UIcon name="i-lucide-chevron-down" class="timeline-speed-chevron" aria-hidden="true" /></label>
+        </div>
       </div>
-      <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small>{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
+      <div class="timeline-track-wrap"><div class="timeline-track-background"><div class="timeline-track-fill" :style="{ width: `${progress / 10}%` }" /><div class="timeline-break" :style="{ left: `${deepPastBreak / 10}%` }" aria-hidden="true">//</div><div class="timeline-break" :style="{ left: `${recentHistoryBreak / 10}%` }" aria-hidden="true">//</div></div><input v-model.number="progress" class="timeline-range" type="range" min="0" max="1000" step="1" :aria-label="t.browse" /><div v-for="mark in timelineMarks" :key="mark" class="timeline-tick" :class="{ 'first-tick': mark === -10000, 'last-tick': mark === 2026, 'mobile-hidden-tick': mark === -5000 || mark === -1000 }" :style="{ left: `${toProgress(mark) / 10}%` }"><span class="tick-line" /><small :dir="language === 'fa' ? 'rtl' : 'ltr'">{{ mark === 2026 ? t.today : displayYear(mark) }}</small></div></div>
       <div class="timeline-eras"><div v-for="era in eraRanges" :key="era.label" class="timeline-era" :style="{ left: `${toProgress(era.from) / 10}%`, width: `${(toProgress(era.to) - toProgress(era.from)) / 10}%` }" :title="`${t[era.label]}: ${displayYear(era.from)}–${displayYear(era.to)}`"><span dir="auto">{{ t[era.label] }}</span></div></div>
     </footer>
   </div>
