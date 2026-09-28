@@ -11,7 +11,7 @@ interface AtlasFeature {
 }
 interface AtlasCollection { type: 'FeatureCollection'; features: AtlasFeature[] }
 interface Snapshot { from: number; to: number; file: string }
-interface Detail { descriptions: { from: number; to: number; markdown: Record<'en' | 'pes', string>; sources: string[] }[]; sources: Record<string, string> }
+interface Detail { descriptions: { from: number; to: number; markdown: Record<'en' | 'pes', string>; sources: string[] }[]; borders?: { from: number; to: number; note: string; sources: string[] }[]; sources: Record<string, string> }
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -33,7 +33,7 @@ const isGlobe = ref(false)
 const terrainOn = ref(false)
 const playing = ref(false)
 const playbackSpeed = ref(1)
-const playbackSpeeds = [1, 2, 5, 20] as const
+const playbackSpeeds = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 20] as const
 const mapReady = ref(false)
 const mapError = ref('')
 const currentFeatures = ref<AtlasFeature[]>([])
@@ -53,6 +53,7 @@ let skyBackdrop: SkyBackdrop | null = null
 let skyLoading: Promise<void> | null = null
 let skyDisposed = false
 let playbackFrame: number | null = null
+let playbackRemainder = 0
 let requestVersion = 0
 let pendingFile = ''
 const cache = new Map<string, AtlasCollection>()
@@ -66,7 +67,7 @@ const copy = {
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
     settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
-    about: 'About this atlas', contribute: 'Contribute', details: 'Details', city: 'City', sources: 'Sources',
+    about: 'About this atlas', contribute: 'Contribute', details: 'Details', city: 'City', polity: 'Polity', sources: 'Sources',
     infoTitle: 'A map built together', infoBody: 'Jaam-e Jam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
     close: 'Close', noResults: 'No matching features at this date', mapLoading: 'Loading map…', mapUnavailable: 'Map could not load. Check your connection or MapTiler access.',
     start: 'Start timeline', pause: 'Pause timeline', earlier: 'Earlier', later: 'Later', speed: 'Playback speed', today: 'Today'
@@ -76,7 +77,7 @@ const copy = {
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
     settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', classical: 'دوران کلاسیک', middleAges: 'قرون وسطی', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
-    about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات', city: 'شهر', sources: 'منابع',
+    about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات', city: 'شهر', polity: 'حکومت', sources: 'منابع',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
     close: 'بستن', noResults: 'برای این تاریخ موردی یافت نشد', mapLoading: 'نقشه در حال بارگذاری…', mapUnavailable: 'نقشه بارگذاری نشد. اتصال یا دسترسی MapTiler را بررسی کنید.',
     start: 'پخش زمان', pause: 'توقف زمان', earlier: 'زمان پیشین', later: 'زمان پسین', speed: 'سرعت پخش', today: 'امروز'
@@ -122,12 +123,13 @@ const eraRanges = [
 const selectedDetail = computed(() => selectedId.value ? detail.value[selectedId.value] : undefined)
 const selectedFeature = computed(() => currentFeatures.value.find(feature => feature.properties.id === selectedId.value))
 const selectedDescription = computed(() => selectedDetail.value?.descriptions.find(item => year.value >= item.from && year.value <= item.to))
+const selectedBorder = computed(() => selectedDetail.value?.borders?.find(item => year.value >= item.from && year.value <= item.to))
 const selectedName = computed(() => {
   const properties = selectedFeature.value?.properties
   return (dataLanguage.value === 'pes' ? properties?.name_pes : properties?.name_en) || properties?.name || ''
 })
 const renderedDescription = computed(() => markdown.render(selectedDescription.value?.markdown[dataLanguage.value] || ''))
-const selectedSources = computed(() => selectedDescription.value?.sources.map(id => selectedDetail.value?.sources[id]).filter((source): source is string => !!source) || [])
+const selectedSources = computed(() => [...new Set([...(selectedDescription.value?.sources || []), ...(selectedBorder.value?.sources || [])])].map(id => selectedDetail.value?.sources[id]).filter((source): source is string => !!source))
 const searchResults = computed(() => currentFeatures.value.filter(feature => {
   if (!search.value.trim()) return false
   return `${feature.properties.name} ${feature.properties.search || ''}`.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase())
@@ -171,7 +173,7 @@ async function loadSnapshot() {
 function updateVisibility() {
   if (!mapReady.value || !map) return
   const groups: Record<keyof typeof visible, string[]> = {
-    region: ['atlas-region-fill', 'atlas-region-line'],
+    region: ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label'],
     settlement: ['atlas-settlements', ...settlementLabelLayers],
     route: ['atlas-routes'], event: ['atlas-events']
   }
@@ -181,7 +183,7 @@ function updateVisibility() {
 }
 function updateMapLanguage() {
   if (!mapReady.value || !map) return
-  for (const id of settlementLabelLayers) {
+  for (const id of ['atlas-region-label', ...settlementLabelLayers]) {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']])
   }
 }
@@ -261,19 +263,26 @@ function stepYear(direction: number) { year.value = advanceYear(year.value, dire
 function stopPlayback() {
   if (playbackFrame !== null) cancelAnimationFrame(playbackFrame)
   playbackFrame = null
+  playbackRemainder = 0
   playing.value = false
 }
 function playbackTick() {
-  const next = advanceYear(year.value, playbackSpeed.value)
-  if (next === year.value) return stopPlayback()
-  year.value = next
-  if (next >= 2026) return stopPlayback()
+  playbackRemainder += playbackSpeed.value
+  const years = Math.floor(playbackRemainder + 1e-9)
+  playbackRemainder -= years
+  if (years > 0) {
+    const next = advanceYear(year.value, years)
+    if (next === year.value) return stopPlayback()
+    year.value = next
+    if (next >= 2026) return stopPlayback()
+  }
   playbackFrame = requestAnimationFrame(playbackTick)
 }
 function togglePlayback() {
   if (playing.value) return stopPlayback()
   if (year.value >= 2026) return
   playing.value = true
+  playbackRemainder = 0
   playbackFrame = requestAnimationFrame(playbackTick)
 }
 function handlePlaybackShortcut(event: KeyboardEvent) {
@@ -283,6 +292,7 @@ function handlePlaybackShortcut(event: KeyboardEvent) {
   if (!event.repeat) togglePlayback()
 }
 watch(year, loadSnapshot)
+watch(playbackSpeed, () => { playbackRemainder = 0 })
 watch(visible, updateVisibility)
 watch(language, updateMapLanguage)
 
@@ -309,15 +319,16 @@ onMounted(async () => {
     map.on('load', () => {
       if (!map) return
       map.addSource('atlas', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-      map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': '#3d7884', 'fill-opacity': 0.24 } })
-      map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': '#245b68', 'line-width': 2.5, 'line-opacity': 0.85, 'line-dasharray': [3, 2] } })
+      map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': '#3d7884', 'fill-opacity': 0.15 } })
+      map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': '#245b68', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [3, 2] } })
+      map.addLayer({ id: 'atlas-region-label', type: 'symbol', source: 'atlas', minzoom: 1.5, maxzoom: 5.5, filter: ['all', ['==', ['get', 'kind'], 'region'], ['==', ['geometry-type'], 'Point']], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 15, 'text-letter-spacing': 0.08 }, paint: { 'text-color': '#245b68', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
       map.addLayer({ id: 'atlas-routes', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'route'], paint: { 'line-color': '#bd6b45', 'line-width': 3, 'line-dasharray': [2, 2] } })
       map.addLayer({ id: 'atlas-settlements', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'level'], 1, 3.5, 5, 9], 'circle-color': '#9b4e38', 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff9ef' } })
       map.addLayer({ id: 'atlas-events', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'event'], paint: { 'circle-radius': 8, 'circle-color': '#d8a03e', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff9ef' } })
       for (const level of [1, 2, 3, 4, 5]) {
         map.addLayer({ id: `atlas-settlement-label-${level}`, type: 'symbol', source: 'atlas', minzoom: ({ 1: 8, 2: 7, 3: 5.5, 4: 4, 5: 2.5 } as Record<number, number>)[level], filter: ['all', ['==', ['get', 'kind'], 'settlement'], ['==', ['get', 'level'], level]], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-offset': [0, 1.65], 'text-anchor': 'top' }, paint: { 'text-color': '#263d40', 'text-halo-color': '#fff9ef', 'text-halo-width': 1.5 } })
       }
-      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
+      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
         map.on('mouseenter', id, () => { if (map) map.getCanvas().style.cursor = 'pointer' })
         map.on('mouseleave', id, () => { if (map) map.getCanvas().style.cursor = '' })
         map.on('click', id, event => { const featureId = event.features?.[0]?.properties?.id; if (featureId) void openFeature(String(featureId)) })
@@ -396,7 +407,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', handlePlaybackSh
     <aside v-if="selectedId || aboutOpen" class="floating-panel detail-panel">
       <div class="panel-heading"><span>{{ aboutOpen ? t.about : t.details }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="selectedId = null; aboutOpen = false"><UIcon name="i-lucide-x" /></button></div>
       <div class="detail-content" v-if="aboutOpen"><span class="detail-glyph">ج</span><h2>{{ t.infoTitle }}</h2><p>{{ t.infoBody }}</p></div>
-      <div class="detail-content" v-else-if="selectedDetail && selectedDescription"><span class="detail-type">{{ t.city }}</span><h2>{{ selectedName }}</h2><div class="detail-rule" /><div class="detail-markdown" v-html="renderedDescription" /><div v-if="selectedSources.length" class="detail-sources"><h3>{{ t.sources }}</h3><ul><li v-for="source in selectedSources" :key="source" v-html="markdown.renderInline(source)" /></ul></div></div>
+      <div class="detail-content" v-else-if="selectedDetail && selectedDescription"><span class="detail-type">{{ selectedFeature?.properties.kind === 'region' ? t.polity : t.city }}</span><h2>{{ selectedName }}</h2><div class="detail-rule" /><div class="detail-markdown" v-html="renderedDescription" /><div v-if="selectedSources.length" class="detail-sources"><h3>{{ t.sources }}</h3><ul><li v-for="source in selectedSources" :key="source" v-html="markdown.renderInline(source)" /></ul></div></div>
       <div class="detail-content" v-else><p>{{ t.mapLoading }}</p></div>
       <a class="detail-contribute" :href="contributionUrl" target="_blank" rel="noopener noreferrer">{{ t.contribute }}<UIcon name="i-lucide-arrow-up-right" class="icon" /></a>
     </aside>
