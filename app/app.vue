@@ -33,7 +33,7 @@ const isGlobe = ref(false)
 const terrainOn = ref(false)
 const playing = ref(false)
 const playbackSpeed = ref(1)
-const playbackSpeeds = [1, 2, 5, 20] as const
+const playbackSpeeds = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 20] as const
 const mapReady = ref(false)
 const mapError = ref('')
 const currentFeatures = ref<AtlasFeature[]>([])
@@ -53,6 +53,7 @@ let skyBackdrop: SkyBackdrop | null = null
 let skyLoading: Promise<void> | null = null
 let skyDisposed = false
 let playbackFrame: number | null = null
+let playbackRemainder = 0
 let requestVersion = 0
 let pendingFile = ''
 const cache = new Map<string, AtlasCollection>()
@@ -262,19 +263,26 @@ function stepYear(direction: number) { year.value = advanceYear(year.value, dire
 function stopPlayback() {
   if (playbackFrame !== null) cancelAnimationFrame(playbackFrame)
   playbackFrame = null
+  playbackRemainder = 0
   playing.value = false
 }
 function playbackTick() {
-  const next = advanceYear(year.value, playbackSpeed.value)
-  if (next === year.value) return stopPlayback()
-  year.value = next
-  if (next >= 2026) return stopPlayback()
+  playbackRemainder += playbackSpeed.value
+  const years = Math.floor(playbackRemainder + 1e-9)
+  playbackRemainder -= years
+  if (years > 0) {
+    const next = advanceYear(year.value, years)
+    if (next === year.value) return stopPlayback()
+    year.value = next
+    if (next >= 2026) return stopPlayback()
+  }
   playbackFrame = requestAnimationFrame(playbackTick)
 }
 function togglePlayback() {
   if (playing.value) return stopPlayback()
   if (year.value >= 2026) return
   playing.value = true
+  playbackRemainder = 0
   playbackFrame = requestAnimationFrame(playbackTick)
 }
 function handlePlaybackShortcut(event: KeyboardEvent) {
@@ -284,6 +292,7 @@ function handlePlaybackShortcut(event: KeyboardEvent) {
   if (!event.repeat) togglePlayback()
 }
 watch(year, loadSnapshot)
+watch(playbackSpeed, () => { playbackRemainder = 0 })
 watch(visible, updateVisibility)
 watch(language, updateMapLanguage)
 
