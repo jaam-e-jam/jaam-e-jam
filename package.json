@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm data:build && nuxt build",
-    "data:build": "node scripts/build-city-data.mjs",
+    "data:build": "node scripts/build-atlas-data.mjs",
     "dev": "pnpm data:build && nuxt dev",
     "generate": "pnpm data:build && nuxt generate",
     "preview": "nuxt preview",

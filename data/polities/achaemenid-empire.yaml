@@ -1,0 +1,56 @@
+label_point: [53, 34]
+
+labels:
+  - from: "550 BCE"
+    to: "330 BCE"
+    text: { en: Achaemenid Empire, pes: شاهنشاهی هخامنشی }
+    search:
+      en: [First Persian Empire, Persian Empire, Achaemenids]
+      pes: [هخامنشیان, امپراتوری هخامنشی]
+    sources: [met]
+
+borders:
+  - from: "550 BCE"
+    to: "540 BCE"
+    file: geometry/achaemenid-early.geojson
+    note: "Author-drawn regional footprint after the defeat of Media. It generalizes Iran and eastern Anatolia; it is not a precise frontier. The coastline was clipped to Natural Earth 1:110m land."
+    sources: [met, natural-earth]
+  - from: "539 BCE"
+    to: "526 BCE"
+    file: geometry/achaemenid-cyrus.geojson
+    note: "Author-drawn broad extent after the conquest of Babylon, including Anatolia and the Levant but not Egypt. The transition year follows the conquest; outer edges are schematic. Clipped to Natural Earth 1:110m land."
+    sources: [met, natural-earth]
+  - from: "525 BCE"
+    to: "516 BCE"
+    file: geometry/achaemenid-egypt.geojson
+    note: "The preceding outline with a generalized Nile and Sinai region after Cambyses' conquest of Egypt. This does not trace administrative or military frontiers. Clipped to Natural Earth 1:110m land."
+    sources: [met, natural-earth]
+  - from: "515 BCE"
+    to: "405 BCE"
+    file: geometry/achaemenid-height.geojson
+    note: "Broad imperial extent after Darius' eastern expansion, including the lower Indus region and Egypt. Peripheral holdings and internal divisions are omitted. Its shape is schematic, not a year-by-year frontier. Clipped to Natural Earth 1:110m land."
+    sources: [met, iranica-satrapies, natural-earth]
+  - from: "404 BCE"
+    to: "344 BCE"
+    file: geometry/achaemenid-without-egypt.geojson
+    note: "Broad late imperial extent with independent Egypt omitted. The 404 BCE display boundary is approximate; other western changes are not individually mapped. Clipped to Natural Earth 1:110m land."
+    sources: [met-egypt, iranica-satrapies, natural-earth]
+  - from: "343 BCE"
+    to: "330 BCE"
+    file: geometry/achaemenid-height.geojson
+    note: "Reuses the generalized high-extent shape after Artaxerxes III reconquered Egypt. Reuse is schematic and does not claim all earlier frontiers were restored. Clipped to Natural Earth 1:110m land."
+    sources: [met-egypt, natural-earth]
+
+descriptions:
+  - from: "550 BCE"
+    to: "330 BCE"
+    markdown:
+      en: "Founded by Cyrus II in the mid-sixth century BCE, the Achaemenid Empire expanded from Iran across Anatolia and Mesopotamia. At its height it reached Egypt, Central Asia, and northwestern India. Egypt became independent in the early fourth century BCE and was reconquered under Artaxerxes III before Alexander's conquest ended the empire."
+      pes: "شاهنشاهی هخامنشی در میانهٔ سدهٔ ششم پیش از میلاد به دست کوروش دوم شکل گرفت و از ایران به آناتولی و میان‌رودان گسترش یافت. قلمرو آن در اوج به مصر، آسیای میانه و شمال‌غرب هند می‌رسید. مصر در اوایل سدهٔ چهارم از فرمان هخامنشیان بیرون رفت و در زمان اردشیر سوم دوباره فتح شد. فتوحات اسکندر به این شاهنشاهی پایان داد."
+    sources: [met, met-egypt]
+
+sources:
+  met: "The Metropolitan Museum of Art, [The Achaemenid Persian Empire (550–330 BCE)](https://www.metmuseum.org/essays/the-achaemenid-persian-empire-550-330-b-c), 2004."
+  iranica-satrapies: "Bruno Jacobs, [Achaemenid Satrapies](https://www.iranicaonline.org/articles/achaemenid-satrapies/), Encyclopaedia Iranica."
+  met-egypt: "Marsha Hill, [Egypt in the Ptolemaic Period](https://www.metmuseum.org/essays/egypt-in-the-ptolemaic-period), The Metropolitan Museum of Art, 2016."
+  natural-earth: "[Natural Earth 1:110m land polygons](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_land.geojson), [public domain](https://github.com/nvkelso/natural-earth-vector/blob/master/LICENSE.md)."
