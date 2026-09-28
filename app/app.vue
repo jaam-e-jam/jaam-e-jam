@@ -6,7 +6,7 @@ import type { SkyBackdrop } from './utils/sky-backdrop'
 
 interface AtlasFeature {
   type: 'Feature'
-  properties: { id: string; kind: 'region' | 'regional-name' | 'settlement' | 'route' | 'event'; name: string; level?: number; name_en?: string; name_pes?: string; search?: string }
+  properties: { id: string; kind: 'region' | 'regional-name' | 'settlement' | 'route' | 'event'; name: string; level?: number; color?: string; name_en?: string; name_pes?: string; search?: string }
   geometry: { type: string; coordinates: unknown }
 }
 interface AtlasCollection { type: 'FeatureCollection'; features: AtlasFeature[] }
@@ -60,6 +60,9 @@ const cache = new Map<string, AtlasCollection>()
 const markdown = new MarkdownIt({ html: false, linkify: true })
 const dataLanguage = computed(() => language.value === 'fa' ? 'pes' : 'en')
 const settlementLabelLayers = [1, 2, 3, 4, 5].map(level => `atlas-settlement-label-${level}`)
+// Each regional-name level occupies one fixed, nonoverlapping zoom band.
+const regionalNameZoomStops = [1.5, 4, 7, 16] as const
+const regionalNameLabelLayers = [1, 2, 3].map(level => `atlas-regional-name-label-${level}`)
 
 const copy = {
   en: {
@@ -174,7 +177,7 @@ function updateVisibility() {
   if (!mapReady.value || !map) return
   const groups: Record<keyof typeof visible, string[]> = {
     region: ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label'],
-    regionalName: ['atlas-regional-name-label'],
+    regionalName: regionalNameLabelLayers,
     settlement: ['atlas-settlements', ...settlementLabelLayers],
     route: ['atlas-routes'], event: ['atlas-events']
   }
@@ -184,7 +187,7 @@ function updateVisibility() {
 }
 function updateMapLanguage() {
   if (!mapReady.value || !map) return
-  for (const id of ['atlas-region-label', 'atlas-regional-name-label', ...settlementLabelLayers]) {
+  for (const id of ['atlas-region-label', ...regionalNameLabelLayers, ...settlementLabelLayers]) {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']])
   }
 }
@@ -196,7 +199,11 @@ async function openFeature(id: string) {
   search.value = ''
   if (feature?.properties.kind === 'regional-name') {
     selectedId.value = null
-    map?.flyTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 5.5), speed: 0.9 })
+    const level = feature.properties.level ?? 2
+    const minimum = regionalNameZoomStops[level - 1] ?? regionalNameZoomStops[0]
+    const maximum = regionalNameZoomStops[level] ?? regionalNameZoomStops[2]
+    const zoom = map ? Math.max(minimum, Math.min(map.getZoom(), maximum - 0.25)) : minimum
+    map?.flyTo({ center: feature.geometry.coordinates as [number, number], zoom, speed: 0.9 })
     return
   }
   selectedId.value = id
@@ -325,21 +332,25 @@ onMounted(async () => {
     map.on('load', () => {
       if (!map) return
       map.addSource('atlas', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-      map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': '#3d7884', 'fill-opacity': 0.15 } })
-      map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': '#245b68', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [3, 2] } })
-      map.addLayer({ id: 'atlas-region-label', type: 'symbol', source: 'atlas', minzoom: 1.5, maxzoom: 5.5, filter: ['all', ['==', ['get', 'kind'], 'region'], ['==', ['geometry-type'], 'Point']], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 15, 'text-letter-spacing': 0.08 }, paint: { 'text-color': '#245b68', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
-      map.addLayer({ id: 'atlas-regional-name-label', type: 'symbol', source: 'atlas', minzoom: 4, filter: ['==', ['get', 'kind'], 'regional-name'], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-letter-spacing': 0.04 }, paint: { 'text-color': '#4b6869', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
+      map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.2 } })
+      map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [3, 2] } })
       map.addLayer({ id: 'atlas-routes', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'route'], paint: { 'line-color': '#bd6b45', 'line-width': 3, 'line-dasharray': [2, 2] } })
       map.addLayer({ id: 'atlas-settlements', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'level'], 1, 3.5, 5, 9], 'circle-color': '#9b4e38', 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff9ef' } })
       map.addLayer({ id: 'atlas-events', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'event'], paint: { 'circle-radius': 8, 'circle-color': '#d8a03e', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff9ef' } })
+      // Text sits above markers. Polity names are last so city icons cannot cover them.
+      for (const level of [1, 2, 3]) {
+        map.addLayer({ id: `atlas-regional-name-label-${level}`, type: 'symbol', source: 'atlas', minzoom: regionalNameZoomStops[level - 1], maxzoom: regionalNameZoomStops[level], filter: ['all', ['==', ['get', 'kind'], 'regional-name'], ['==', ['get', 'level'], level]], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-letter-spacing': 0.04, 'text-offset': [0, -1.3], 'text-anchor': 'bottom' }, paint: { 'text-color': '#4b6869', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
+      }
       for (const level of [1, 2, 3, 4, 5]) {
         map.addLayer({ id: `atlas-settlement-label-${level}`, type: 'symbol', source: 'atlas', minzoom: ({ 1: 8, 2: 7, 3: 5.5, 4: 4, 5: 2.5 } as Record<number, number>)[level], filter: ['all', ['==', ['get', 'kind'], 'settlement'], ['==', ['get', 'level'], level]], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-offset': [0, 1.65], 'text-anchor': 'top' }, paint: { 'text-color': '#263d40', 'text-halo-color': '#fff9ef', 'text-halo-width': 1.5 } })
       }
-      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label', 'atlas-regional-name-label', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
-        map.on('mouseenter', id, () => { if (map) map.getCanvas().style.cursor = 'pointer' })
-        map.on('mouseleave', id, () => { if (map) map.getCanvas().style.cursor = '' })
-        map.on('click', id, event => { const featureId = event.features?.[0]?.properties?.id; if (featureId) void openFeature(String(featureId)) })
-      }
+      map.addLayer({ id: 'atlas-region-label', type: 'symbol', source: 'atlas', minzoom: 1.5, maxzoom: 5.5, filter: ['all', ['==', ['get', 'kind'], 'region'], ['==', ['geometry-type'], 'Point']], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 15, 'text-letter-spacing': 0.08, 'text-allow-overlap': true, 'text-ignore-placement': true }, paint: { 'text-color': ['get', 'color'], 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
+      const interactiveLayers = ['atlas-region-fill', 'atlas-region-line', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...regionalNameLabelLayers, ...settlementLabelLayers, 'atlas-region-label']
+      map.on('mousemove', event => { if (map) map.getCanvas().style.cursor = map.queryRenderedFeatures(event.point, { layers: interactiveLayers }).length ? 'pointer' : '' })
+      map.on('click', event => {
+        const featureId = map?.queryRenderedFeatures(event.point, { layers: interactiveLayers })[0]?.properties?.id
+        if (featureId) void openFeature(String(featureId))
+      })
       mapReady.value = true
       mapError.value = ''
       void loadSnapshot()

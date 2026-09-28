@@ -116,7 +116,7 @@ async function loadRecords(directory, sections, cuts, extraKeys = []) {
       cuts.add(period.fromYear)
       cuts.add(period.toYear + 1)
     }
-    records.push({ id, periods, labelPoint: record.label_point, sources: record.sources })
+    records.push({ id, periods, labelPoint: record.label_point, color: record.color, level: record.level, sources: record.sources })
   }
   return records
 }
@@ -129,11 +129,12 @@ async function main() {
   const cuts = new Set([firstYear, lastYear + 1])
   const cities = await loadRecords(cityDir, citySections, cuts)
   if (!cities.length) throw new Error('No city YAML files found')
-  const polities = await loadRecords(polityDir, politySections, cuts, ['label_point'])
-  const regionalNames = await loadRecords(regionalNameDir, ['labels'], cuts)
+  const polities = await loadRecords(polityDir, politySections, cuts, ['label_point', 'color'])
+  const regionalNames = await loadRecords(regionalNameDir, ['labels'], cuts, ['level'])
   const ids = new Set(cities.map(city => city.id))
   for (const polity of polities) {
     if (ids.has(polity.id)) fail(polity.id, 'ID is already used by a city')
+    if (typeof polity.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(polity.color)) fail(polity.id, 'color must be a six-digit HEX color such as #7851A9')
     ids.add(polity.id)
     for (const border of polity.periods.borders) {
       let contents
@@ -147,6 +148,7 @@ async function main() {
   }
   for (const region of regionalNames) {
     if (ids.has(region.id)) fail(region.id, 'ID is already used by another atlas record')
+    if (!Number.isInteger(region.level) || region.level < 1 || region.level > 3) fail(region.id, 'level must be 1, 2, or 3')
     ids.add(region.id)
     region.periods.labels.forEach((label, index) => {
       if (!validPoint(label.point)) fail(region.id, `labels[${index}] needs a [longitude, latitude] point`)
@@ -206,12 +208,12 @@ async function main() {
       const search = [...Object.values(label.text), ...Object.values(label.search || {}).flat()]
       features.push({
         type: 'Feature',
-        properties: { id: polity.id, kind: 'region', name: label.text.en, search: search.join(' '), ...names },
+        properties: { id: polity.id, kind: 'region', color: polity.color, name: label.text.en, search: search.join(' '), ...names },
         geometry: border.geometry
       })
       if (polity.labelPoint) features.push({
         type: 'Feature',
-        properties: { id: polity.id, kind: 'region', name: label.text.en, ...names },
+        properties: { id: polity.id, kind: 'region', color: polity.color, name: label.text.en, ...names },
         geometry: { type: 'Point', coordinates: polity.labelPoint }
       })
     }
@@ -222,7 +224,7 @@ async function main() {
       const search = [...Object.values(label.text), ...Object.values(label.search || {}).flat()]
       features.push({
         type: 'Feature',
-        properties: { id: region.id, kind: 'regional-name', name: label.text.en, search: search.join(' '), ...names },
+        properties: { id: region.id, kind: 'regional-name', level: region.level, name: label.text.en, search: search.join(' '), ...names },
         geometry: { type: 'Point', coordinates: label.point }
       })
     }
