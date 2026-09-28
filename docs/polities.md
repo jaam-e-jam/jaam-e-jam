@@ -2,7 +2,7 @@
 
 Contributors edit one YAML record at `data/polities/<id>.yaml` and one or more GeoJSON geometry files in `data/polities/geometry/`. The filename is the stable ID; the directory supplies the entity type. Do not repeat `id` or `kind` in the YAML. [`achaemenid-empire.yaml`](../data/polities/achaemenid-empire.yaml) is the first example.
 
-This format represents a polity with one broad, evolving territory. It does not divide the Achaemenid Empire into satrapies or use a status category for tributaries and vassals. A border version is a generalized map depiction for an interval, not a claim that every line stayed fixed throughout it.
+This format represents a polity with one broad, evolving territory. It does not divide the Achaemenid Empire into satrapies or use a status category for tributaries and vassals. [Regional names](regional-names.md) can label satrapies or provinces without adding their borders. A border version is a generalized map depiction for an interval, not a claim that every line stayed fixed throughout it.
 
 ## YAML fields
 

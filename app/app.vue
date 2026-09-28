@@ -6,7 +6,7 @@ import type { SkyBackdrop } from './utils/sky-backdrop'
 
 interface AtlasFeature {
   type: 'Feature'
-  properties: { id: string; kind: 'region' | 'settlement' | 'route' | 'event'; name: string; level?: number; name_en?: string; name_pes?: string; search?: string }
+  properties: { id: string; kind: 'region' | 'regional-name' | 'settlement' | 'route' | 'event'; name: string; level?: number; name_en?: string; name_pes?: string; search?: string }
   geometry: { type: string; coordinates: unknown }
 }
 interface AtlasCollection { type: 'FeatureCollection'; features: AtlasFeature[] }
@@ -37,7 +37,7 @@ const playbackSpeeds = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 20] as const
 const mapReady = ref(false)
 const mapError = ref('')
 const currentFeatures = ref<AtlasFeature[]>([])
-const visible = reactive({ region: true, settlement: true, route: true, event: true })
+const visible = reactive({ region: true, regionalName: true, settlement: true, route: true, event: true })
 const mapElement = ref<HTMLElement | null>(null)
 const skyCanvas = ref<HTMLCanvasElement | null>(null)
 const snapshots = ref<Snapshot[]>([])
@@ -65,7 +65,7 @@ const copy = {
   en: {
     siteName: 'Jaam-e Jam', atlas: 'A collaborative historical atlas', explore: 'Explore the world through time',
     search: 'Search the map', layers: 'Layers', language: 'Language', terrain: 'Terrain', flat: '2D map', globe: '3D globe',
-    settlements: 'Settlements', regions: 'Regions & polities', routes: 'Routes', events: 'Events',
+    settlements: 'Settlements', regions: 'Polities', regionalNames: 'Regional names', routes: 'Routes', events: 'Events',
     browse: 'Browse time', year: 'Year', prehistory: 'Prehistory', classical: 'Classical', middleAges: 'Middle Ages', earlyModern: 'Early modern', modern: 'Modern',
     about: 'About this atlas', contribute: 'Contribute', details: 'Details', city: 'City', polity: 'Polity', sources: 'Sources',
     infoTitle: 'A map built together', infoBody: 'Jaam-e Jam is a collaborative historical atlas. Explore places, polities, routes, and events across time, and contribute through GitHub.',
@@ -75,7 +75,7 @@ const copy = {
   fa: {
     siteName: 'جام جم', atlas: 'اطلس تاریخی مشارکتی', explore: 'جهان را در گذر زمان ببینید',
     search: 'جستجو در نقشه', layers: 'لایه‌ها', language: 'زبان', terrain: 'پستی‌وبلندی', flat: 'نقشهٔ دوبعدی', globe: 'کرهٔ سه‌بعدی',
-    settlements: 'سکونتگاه‌ها', regions: 'سرزمین‌ها و حکومت‌ها', routes: 'مسیرها', events: 'رویدادها',
+    settlements: 'سکونتگاه‌ها', regions: 'حکومت‌ها', regionalNames: 'نام‌های نواحی', routes: 'مسیرها', events: 'رویدادها',
     browse: 'پیمایش زمان', year: 'سال', prehistory: 'پیشاتاریخ', classical: 'دوران کلاسیک', middleAges: 'قرون وسطی', earlyModern: 'اوایل دوران مدرن', modern: 'دوران مدرن',
     about: 'دربارهٔ اطلس', contribute: 'مشارکت', details: 'جزئیات', city: 'شهر', polity: 'حکومت', sources: 'منابع',
     infoTitle: 'نقشه‌ای که با هم می‌سازیم', infoBody: 'جام جم اطلسی تاریخی و مشارکتی است. مکان‌ها، حکومت‌ها، مسیرها و رویدادها را در گذر زمان کاوش کنید و از راه گیت‌هاب در تکمیل آن سهیم شوید.',
@@ -174,6 +174,7 @@ function updateVisibility() {
   if (!mapReady.value || !map) return
   const groups: Record<keyof typeof visible, string[]> = {
     region: ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label'],
+    regionalName: ['atlas-regional-name-label'],
     settlement: ['atlas-settlements', ...settlementLabelLayers],
     route: ['atlas-routes'], event: ['atlas-events']
   }
@@ -183,23 +184,28 @@ function updateVisibility() {
 }
 function updateMapLanguage() {
   if (!mapReady.value || !map) return
-  for (const id of ['atlas-region-label', ...settlementLabelLayers]) {
+  for (const id of ['atlas-region-label', 'atlas-regional-name-label', ...settlementLabelLayers]) {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'text-field', ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']])
   }
 }
 
 async function openFeature(id: string) {
-  selectedId.value = id
+  const feature = currentFeatures.value.find(item => item.properties.id === id)
   layersOpen.value = false
   searchOpen.value = false
   search.value = ''
+  if (feature?.properties.kind === 'regional-name') {
+    selectedId.value = null
+    map?.flyTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 5.5), speed: 0.9 })
+    return
+  }
+  selectedId.value = id
   if (!detail.value[id]) {
     try {
       const response = await fetch(asset(`atlas/details/${id}.json`))
       if (response.ok) detail.value[id] = await response.json() as Detail
     } catch { /* The map remains usable when an individual detail file is unavailable. */ }
   }
-  const feature = currentFeatures.value.find(item => item.properties.id === id)
   if (feature?.geometry.type === 'Point') {
     map?.flyTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(map.getZoom(), 5.5), speed: 0.9 })
   }
@@ -322,13 +328,14 @@ onMounted(async () => {
       map.addLayer({ id: 'atlas-region-fill', type: 'fill', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'fill-color': '#3d7884', 'fill-opacity': 0.15 } })
       map.addLayer({ id: 'atlas-region-line', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'region'], paint: { 'line-color': '#245b68', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [3, 2] } })
       map.addLayer({ id: 'atlas-region-label', type: 'symbol', source: 'atlas', minzoom: 1.5, maxzoom: 5.5, filter: ['all', ['==', ['get', 'kind'], 'region'], ['==', ['geometry-type'], 'Point']], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 15, 'text-letter-spacing': 0.08 }, paint: { 'text-color': '#245b68', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
+      map.addLayer({ id: 'atlas-regional-name-label', type: 'symbol', source: 'atlas', minzoom: 4, filter: ['==', ['get', 'kind'], 'regional-name'], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-letter-spacing': 0.04 }, paint: { 'text-color': '#4b6869', 'text-halo-color': '#fff9ef', 'text-halo-width': 2 } })
       map.addLayer({ id: 'atlas-routes', type: 'line', source: 'atlas', filter: ['==', ['get', 'kind'], 'route'], paint: { 'line-color': '#bd6b45', 'line-width': 3, 'line-dasharray': [2, 2] } })
       map.addLayer({ id: 'atlas-settlements', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'settlement'], paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'level'], 1, 3.5, 5, 9], 'circle-color': '#9b4e38', 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff9ef' } })
       map.addLayer({ id: 'atlas-events', type: 'circle', source: 'atlas', filter: ['==', ['get', 'kind'], 'event'], paint: { 'circle-radius': 8, 'circle-color': '#d8a03e', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff9ef' } })
       for (const level of [1, 2, 3, 4, 5]) {
         map.addLayer({ id: `atlas-settlement-label-${level}`, type: 'symbol', source: 'atlas', minzoom: ({ 1: 8, 2: 7, 3: 5.5, 4: 4, 5: 2.5 } as Record<number, number>)[level], filter: ['all', ['==', ['get', 'kind'], 'settlement'], ['==', ['get', 'level'], level]], layout: { 'text-field': ['coalesce', ['get', `name_${dataLanguage.value}`], ['get', 'name']], 'text-size': 12, 'text-offset': [0, 1.65], 'text-anchor': 'top' }, paint: { 'text-color': '#263d40', 'text-halo-color': '#fff9ef', 'text-halo-width': 1.5 } })
       }
-      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
+      for (const id of ['atlas-region-fill', 'atlas-region-line', 'atlas-region-label', 'atlas-regional-name-label', 'atlas-routes', 'atlas-settlements', 'atlas-events', ...settlementLabelLayers]) {
         map.on('mouseenter', id, () => { if (map) map.getCanvas().style.cursor = 'pointer' })
         map.on('mouseleave', id, () => { if (map) map.getCanvas().style.cursor = '' })
         map.on('click', id, event => { const featureId = event.features?.[0]?.properties?.id; if (featureId) void openFeature(String(featureId)) })
@@ -398,6 +405,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', handlePlaybackSh
       <div class="panel-heading"><span>{{ t.layers }}</span><button type="button" class="plain-close" :aria-label="t.close" @click="layersOpen = false"><UIcon name="i-lucide-x" /></button></div>
       <div class="layer-list">
         <label class="layer-row"><span class="layer-key region-key" /><span class="layer-name">{{ t.regions }}</span><USwitch v-model="visible.region" size="sm" /></label>
+        <label class="layer-row"><span class="layer-key region-key" /><span class="layer-name">{{ t.regionalNames }}</span><USwitch v-model="visible.regionalName" size="sm" /></label>
         <label class="layer-row"><span class="layer-key settlement-key" /><span class="layer-name">{{ t.settlements }}</span><USwitch v-model="visible.settlement" size="sm" /></label>
         <label class="layer-row"><span class="layer-key route-key" /><span class="layer-name">{{ t.routes }}</span><USwitch v-model="visible.route" size="sm" /></label>
         <label class="layer-row"><span class="layer-key event-key" /><span class="layer-name">{{ t.events }}</span><USwitch v-model="visible.event" size="sm" /></label>

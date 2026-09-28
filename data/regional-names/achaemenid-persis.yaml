@@ -1,0 +1,10 @@
+labels:
+  - from: "522 BCE"
+    to: "330 BCE"
+    text: { en: Persis, pes: پارس }
+    point: [53.5, 29.8]
+    note: "Editorial label anchor in present-day Fars, not a capital or boundary."
+    sources: [iranica-satrapies]
+
+sources:
+  iranica-satrapies: "Bruno Jacobs, [Achaemenid Satrapies](https://www.iranicaonline.org/articles/achaemenid-satrapies/), Encyclopaedia Iranica."
