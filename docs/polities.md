@@ -2,7 +2,7 @@
 
 Contributors edit one YAML record at `data/polities/<id>.yaml` and one or more GeoJSON geometry files in `data/polities/geometry/`. The filename is the stable ID; the directory supplies the entity type. Do not repeat `id` or `kind` in the YAML. [`achaemenid-empire.yaml`](../data/polities/achaemenid-empire.yaml) is the first example.
 
-This format represents a polity with one broad, evolving territory. It does not divide the Achaemenid Empire into satrapies or use a status category for tributaries and vassals. A border version is a generalized map depiction for an interval, not a claim that every line stayed fixed throughout it.
+This format represents a polity with one broad, evolving territory. It does not divide the Achaemenid Empire into satrapies or use a status category for tributaries and vassals. [Regional names](regional-names.md) can label satrapies or provinces without adding their borders. A border version is a generalized map depiction for an interval, not a claim that every line stayed fixed throughout it.
 
 ## YAML fields
 
@@ -12,6 +12,7 @@ This format represents a polity with one broad, evolving territory. It does not 
 | `borders` | `from`, `to`, `file`, `note`, `sources` | Dated territorial shape. The record appears on the map only while a border applies. |
 | `descriptions` | `from`, `to`, `markdown`, `sources` | Short text for the detail card at the selected year. |
 | `label_point` | `[longitude, latitude]` | Optional editorial anchor for one map label; it is not a capital or a border claim. |
+| `color` | `#RRGGBB` | Required polity color, used for its territory fill, outline, and map name. |
 | `sources` | citation IDs mapped to citation strings | Bibliography shared by dated entries. |
 
 Each section must be a nonempty list. Entries within the same section cannot overlap. For every year covered by a border, a label and description must also apply. Labels, descriptions, and borders can change on different dates. Gaps between border periods hide the polity during those years.
@@ -21,6 +22,8 @@ Dates are quoted strings such as `"539 BCE"` and `"226 CE"`, with inclusive endp
 `labels[].text` and `descriptions[].markdown` use [BCP 47 language tags](https://www.rfc-editor.org/info/bcp47/). Both currently require `en` and `pes`; additional tags are welcome. `labels[].search` maps language tags to lists of alternate names. The app displays English or Persian names according to its current language setting and searches all names and aliases for the selected year.
 
 If a map label is wanted, place `label_point` inside the territory for all its periods. It stays fixed as the border changes and has no historical meaning of its own. Omit it when no single placement works.
+
+Choose one six-digit HEX `color` per polity, for example `color: "#7851A9"` for the Achaemenid Empire's royal purple. The color is visual styling, not a historical claim. Each polity can use its own color; the map uses it consistently for all dated borders and the name label.
 
 ## Geometry and evidence
 

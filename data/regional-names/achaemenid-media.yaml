@@ -1,0 +1,12 @@
+level: 2
+
+labels:
+  - from: "522 BCE"
+    to: "330 BCE"
+    text: { en: Media, pes: ماد }
+    point: [48.5, 34.8]
+    note: "Editorial label anchor near the Ecbatana area, not a precise provincial centre or boundary."
+    sources: [iranica-satrapies]
+
+sources:
+  iranica-satrapies: "Bruno Jacobs, [Achaemenid Satrapies](https://www.iranicaonline.org/articles/achaemenid-satrapies/), Encyclopaedia Iranica."

@@ -1,4 +1,5 @@
 label_point: [53, 34]
+color: "#7851A9"
 
 labels:
   - from: "550 BCE"

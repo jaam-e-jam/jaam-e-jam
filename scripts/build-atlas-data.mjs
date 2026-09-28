@@ -7,6 +7,7 @@ import { parseDocument } from 'yaml'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const cityDir = join(root, 'data/cities')
 const polityDir = join(root, 'data/polities')
+const regionalNameDir = join(root, 'data/regional-names')
 const outputDir = join(root, 'public/atlas')
 const firstYear = -10000
 const lastYear = 2026
@@ -27,6 +28,10 @@ function year(value, id) {
 function validateSources(record, ids, id, section) {
   if (!Array.isArray(ids) || !ids.length) fail(id, `${section} needs at least one source`)
   for (const ref of ids) if (typeof record.sources[ref] !== 'string') fail(id, `${section} references missing source ${ref}`)
+}
+
+function validPoint(point) {
+  return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite) && Math.abs(point[0]) <= 180 && Math.abs(point[1]) <= 90
 }
 
 function parseRecord(contents, id, sections, extraKeys = []) {
@@ -68,8 +73,7 @@ function validatePeriods(record, id, section) {
       }
     }
     if (section === 'locations') {
-      const point = entry.point
-      if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite) || Math.abs(point[0]) > 180 || Math.abs(point[1]) > 90) fail(id, `${section}[${index}] needs a [longitude, latitude] point`)
+      if (!validPoint(entry.point)) fail(id, `${section}[${index}] needs a [longitude, latitude] point`)
     }
     if (section === 'borders') {
       if (typeof entry.file !== 'string' || !/^geometry\/[a-z0-9]+(?:-[a-z0-9]+)*\.geojson$/.test(entry.file)) fail(id, `${section}[${index}] needs a geometry/<name>.geojson file`)
@@ -106,13 +110,13 @@ async function loadRecords(directory, sections, cuts, extraKeys = []) {
     const id = file.slice(0, -5)
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) fail(file, 'filename must be a lowercase hyphenated ID')
     const record = parseRecord(await readFile(join(directory, file), 'utf8'), id, sections, extraKeys)
-    if (record.label_point !== undefined && (!Array.isArray(record.label_point) || record.label_point.length !== 2 || !record.label_point.every(Number.isFinite) || Math.abs(record.label_point[0]) > 180 || Math.abs(record.label_point[1]) > 90)) fail(id, 'label_point needs a [longitude, latitude] point')
+    if (record.label_point !== undefined && !validPoint(record.label_point)) fail(id, 'label_point needs a [longitude, latitude] point')
     const periods = Object.fromEntries(sections.map(section => [section, validatePeriods(record, id, section)]))
     for (const section of sections) for (const period of periods[section]) {
       cuts.add(period.fromYear)
       cuts.add(period.toYear + 1)
     }
-    records.push({ id, periods, labelPoint: record.label_point, sources: record.sources })
+    records.push({ id, periods, labelPoint: record.label_point, color: record.color, level: record.level, sources: record.sources })
   }
   return records
 }
@@ -125,10 +129,12 @@ async function main() {
   const cuts = new Set([firstYear, lastYear + 1])
   const cities = await loadRecords(cityDir, citySections, cuts)
   if (!cities.length) throw new Error('No city YAML files found')
-  const polities = await loadRecords(polityDir, politySections, cuts, ['label_point'])
+  const polities = await loadRecords(polityDir, politySections, cuts, ['label_point', 'color'])
+  const regionalNames = await loadRecords(regionalNameDir, ['labels'], cuts, ['level'])
   const ids = new Set(cities.map(city => city.id))
   for (const polity of polities) {
     if (ids.has(polity.id)) fail(polity.id, 'ID is already used by a city')
+    if (typeof polity.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(polity.color)) fail(polity.id, 'color must be a six-digit HEX color such as #7851A9')
     ids.add(polity.id)
     for (const border of polity.periods.borders) {
       let contents
@@ -139,6 +145,15 @@ async function main() {
       catch { fail(polity.id, `${border.file} is not valid JSON`) }
       border.geometry = validateGeometry(geometry, polity.id, border.file)
     }
+  }
+  for (const region of regionalNames) {
+    if (ids.has(region.id)) fail(region.id, 'ID is already used by another atlas record')
+    if (!Number.isInteger(region.level) || region.level < 1 || region.level > 3) fail(region.id, 'level must be 1, 2, or 3')
+    ids.add(region.id)
+    region.periods.labels.forEach((label, index) => {
+      if (!validPoint(label.point)) fail(region.id, `labels[${index}] needs a [longitude, latitude] point`)
+      if (label.note !== undefined && (typeof label.note !== 'string' || !label.note.trim())) fail(region.id, `labels[${index}] has an empty note`)
+    })
   }
 
   const boundaries = [...cuts].filter(value => value >= firstYear && value <= lastYear + 1).sort((a, b) => a - b)
@@ -193,13 +208,24 @@ async function main() {
       const search = [...Object.values(label.text), ...Object.values(label.search || {}).flat()]
       features.push({
         type: 'Feature',
-        properties: { id: polity.id, kind: 'region', name: label.text.en, search: search.join(' '), ...names },
+        properties: { id: polity.id, kind: 'region', color: polity.color, name: label.text.en, search: search.join(' '), ...names },
         geometry: border.geometry
       })
       if (polity.labelPoint) features.push({
         type: 'Feature',
-        properties: { id: polity.id, kind: 'region', name: label.text.en, ...names },
+        properties: { id: polity.id, kind: 'region', color: polity.color, name: label.text.en, ...names },
         geometry: { type: 'Point', coordinates: polity.labelPoint }
+      })
+    }
+    for (const region of regionalNames) {
+      const label = activeAt(region.periods.labels, from)
+      if (!label) continue
+      const names = Object.fromEntries(Object.entries(label.text).map(([tag, value]) => [`name_${tag}`, value]))
+      const search = [...Object.values(label.text), ...Object.values(label.search || {}).flat()]
+      features.push({
+        type: 'Feature',
+        properties: { id: region.id, kind: 'regional-name', level: region.level, name: label.text.en, search: search.join(' '), ...names },
+        geometry: { type: 'Point', coordinates: label.point }
       })
     }
     const collection = { type: 'FeatureCollection', features }
@@ -215,7 +241,7 @@ async function main() {
     else snapshots.push({ from, to, file })
   }
   await writeFile(join(outputDir, 'time-index.json'), JSON.stringify({ snapshots }))
-  console.log(`Built ${cities.length} cities and ${polities.length} polities, ${snapshots.length} dated map intervals, ${written.size} GeoJSON files`)
+  console.log(`Built ${cities.length} cities, ${polities.length} polities, and ${regionalNames.length} regional names, ${snapshots.length} dated map intervals, ${written.size} GeoJSON files`)
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })

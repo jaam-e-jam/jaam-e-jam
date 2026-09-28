@@ -2,7 +2,7 @@
 
 Contributors edit one YAML file per city at `data/cities/<id>.yaml`. The filename supplies the stable ID, and the `cities` directory supplies the entity type. Do not put `id` or `kind` inside the file. Existing records such as [`ctesiphon.yaml`](../data/cities/ctesiphon.yaml) and [`persepolis.yaml`](../data/cities/persepolis.yaml) are working examples.
 
-This document describes the city format accepted by [`scripts/build-atlas-data.mjs`](../scripts/build-atlas-data.mjs) and displayed by the current map. [Polities](polities.md) have a separate format; roads and events have not yet been defined.
+This document describes the city format accepted by [`scripts/build-atlas-data.mjs`](../scripts/build-atlas-data.mjs) and displayed by the current map. [Polities](polities.md) and [regional names](regional-names.md) have separate formats; roads and events have not yet been defined.
 
 ## File shape
 
